@@ -1,0 +1,474 @@
+/* game.css - Enhanced & Optimized Version */
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Base neutral colors that remain consistent across themes */
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0a0;
+  --text-muted: #6b7280;
+  --border: #374151;
+  --shadow: rgba(0, 0, 0, 0.3);
+  
+  /* Performance optimizations */
+  --backdrop-blur: blur(10px);
+  --transition-standard: 0.3s ease;
+}
+
+/* Purple Theme */
+[data-theme="purple"] {
+  --background: #0f0f1a;
+  --surface: #1a1a2e;
+  --surface-elevated: #252547;
+  --primary: #7c3aed;
+  --primary-hover: #6d28d9;
+  --accent: #f97316;
+  --accent-hover: #ea580c;
+  --gradient-from: #0f0f1a;
+  --gradient-to: #1a1a2e;
+}
+
+/* Red Theme */
+[data-theme="red"] {
+  --background: #1a0f0f;
+  --surface: #2e1a1a;
+  --surface-elevated: #472525;
+  --primary: #dc2626;
+  --primary-hover: #b91c1c;
+  --accent: #f59e0b;
+  --accent-hover: #d97706;
+  --gradient-from: #1a0f0f;
+  --gradient-to: #2e1a1a;
+}
+
+/* Orange Theme */
+[data-theme="orange"] {
+  --background: #1a140f;
+  --surface: #2e241a;
+  --surface-elevated: #473425;
+  --primary: #ea580c;
+  --primary-hover: #c2410c;
+  --accent: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --gradient-from: #1a140f;
+  --gradient-to: #2e241a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-gradient-from: var(--gradient-from);
+  --color-gradient-to: var(--gradient-to);
+  --font-sans: 'Inter', sans-serif;
+}
+
+/* ===== GAME-SPECIFIC STYLES ===== */
+.home-container {
+  background: linear-gradient(135deg, var(--gradient-from) 0%, var(--gradient-to) 100%);
+  min-height: 100vh;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Glass effects for game components */
+.home-glass {
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: var(--backdrop-blur);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  position: relative;
+}
+
+.home-glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--primary) 5%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 5%, transparent) 100%);
+  border-radius: inherit;
+  z-index: -1;
+}
+
+.home-glass-card {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(20px);
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+  box-shadow: 
+    0 8px 32px var(--shadow),
+    0 2px 8px color-mix(in srgb, var(--primary) 10%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+.home-glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--primary) 8%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 8%, transparent) 100%);
+  opacity: 0.3;
+  z-index: -1;
+}
+
+/* Option cards with interactive states */
+.home-option-card {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+.home-option-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--primary) 0%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 0%, transparent) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.home-option-card:hover::before {
+  opacity: 0.1;
+}
+
+.home-option-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 50%, transparent);
+  box-shadow: 0 8px 25px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+/* Correct/Incorrect answer states */
+.home-correct {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, #10b981 20%, transparent) 0%,
+    color-mix(in srgb, #059669 20%, transparent) 100%);
+  border-color: color-mix(in srgb, #10b981 50%, transparent);
+  box-shadow: 0 8px 25px color-mix(in srgb, #10b981 30%, transparent);
+  animation: home-pulse-correct 2s ease-in-out;
+}
+
+.home-incorrect {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, #ef4444 15%, transparent) 0%,
+    color-mix(in srgb, #dc2626 15%, transparent) 100%);
+  border-color: color-mix(in srgb, #ef4444 50%, transparent);
+  box-shadow: 0 8px 25px color-mix(in srgb, #ef4444 20%, transparent);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes home-animate-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes home-animate-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+@keyframes home-animate-celebrate {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes home-pulse-correct {
+  0%, 100% { 
+    box-shadow: 0 8px 25px color-mix(in srgb, #10b981 30%, transparent);
+  }
+  50% { 
+    box-shadow: 0 8px 35px color-mix(in srgb, #10b981 50%, transparent),
+                0 0 30px color-mix(in srgb, #10b981 20%, transparent);
+  }
+}
+
+@keyframes home-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+  50% { 
+    box-shadow: 0 0 30px color-mix(in srgb, var(--primary) 50%, transparent),
+                0 0 40px color-mix(in srgb, var(--primary) 20%, transparent);
+  }
+}
+
+@keyframes home-film-reel {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Animation classes */
+.home-animate-pop {
+  animation: home-animate-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.home-animate-shake {
+  animation: home-animate-shake 0.5s ease-in-out;
+}
+
+.home-animate-celebrate {
+  animation: home-animate-celebrate 0.6s ease-in-out 2;
+}
+
+.home-animate-film-reel {
+  animation: home-film-reel 8s linear infinite;
+}
+
+.home-glow {
+  animation: home-glow 2s ease-in-out infinite;
+}
+
+/* ===== SPECIAL EFFECTS ===== */
+.home-gradient-text {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.home-film-reel {
+  width: 60px;
+  height: 60px;
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--primary) 30%, transparent),
+    color-mix(in srgb, var(--accent) 30%, transparent),
+    color-mix(in srgb, var(--primary) 30%, transparent)
+  );
+  border-radius: 50%;
+  position: relative;
+  opacity: 0.3;
+}
+
+.home-film-reel::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background: var(--surface);
+  border-radius: 50%;
+}
+
+/* Progress bar animation */
+.home-progress-bar {
+  background: linear-gradient(90deg, 
+    var(--primary) 0%,
+    color-mix(in srgb, var(--primary) 70%, var(--accent)) 50%,
+    var(--accent) 100%);
+  transition: width 1s linear;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--primary) 50%, transparent);
+}
+
+/* ===== BUTTON STYLES ===== */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-accent:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .home-container {
+    padding: 1rem;
+  }
+  
+  .home-glass-card {
+    backdrop-filter: blur(10px);
+  }
+  
+  .home-film-reel {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-option-card:hover {
+    transform: none;
+  }
+  
+  .home-glow {
+    animation: none;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .home-animate-pop,
+  .home-animate-shake,
+  .home-animate-celebrate,
+  .home-glow,
+  .home-animate-film-reel {
+    animation: none !important;
+  }
+}
+
+/* Focus styles for accessibility */
+.home-option-card:focus-visible,
+.btn-primary:focus-visible,
+.btn-accent:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  .home-glass {
+    background: var(--surface);
+    border: 2px solid var(--border);
+  }
+  
+  .home-option-card {
+    border: 2px solid var(--border);
+  }
+}
+
+/* = PERFORMANCE OPTIMIZATIONS = */
+.home-option-card,
+.btn-primary,
+.btn-accent {
+  will-change: transform;
+}
+
+.home-container {
+  contain: layout style;
+}
+
+/* Loading state for game transitions */
+.home-loading {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--surface) 100%, transparent) 0%,
+    color-mix(in srgb, var(--surface-elevated) 100%, transparent) 50%,
+    color-mix(in srgb, var(--surface) 100%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: home-shimmer 2s infinite;
+}
+
+@keyframes home-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ===== SCORE DISPLAY ENHANCEMENTS ===== */
+.home-score-display {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--primary) 15%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 15%, transparent) 100%);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+/* ===== TIMER WARNING STATES ===== */
+.home-timer-warning {
+  animation: home-pulse-warning 1s ease-in-out infinite;
+}
+
+@keyframes home-pulse-warning {
+  0%, 100% { 
+    box-shadow: 0 0 10px color-mix(in srgb, #f59e0b 30%, transparent);
+  }
+  50% { 
+    box-shadow: 0 0 20px color-mix(in srgb, #f59e0b 50%, transparent);
+  }
+}
+
+.home-timer-critical {
+  animation: home-pulse-critical 0.5s ease-in-out infinite;
+}
+
+@keyframes home-pulse-critical {
+  0%, 100% { 
+    box-shadow: 0 0 10px color-mix(in srgb, #ef4444 40%, transparent);
+  }
+  50% { 
+    box-shadow: 0 0 20px color-mix(in srgb, #ef4444 60%, transparent);
+  }
+}
