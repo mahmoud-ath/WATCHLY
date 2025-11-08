@@ -1,24 +1,22 @@
 'use client'
 import { ThemeToggle } from './ThemeToggle'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { 
-  Search, 
-  X, 
-  Heart, 
-  Gamepad2, 
-  Share2, 
-  Gift, 
+import Link from 'next/link'
+import {
+  Search,
+  X,
+  Heart,
+  Gamepad2,
+  Share2,
+  Gift,
   Target,
   Film,
-  Home,
   Copy,
   Twitter,
   Facebook,
   MessageCircle,
   Send,
   Linkedin,
-  Star
 } from 'lucide-react'
 
 interface NavbarProps {
@@ -26,7 +24,6 @@ interface NavbarProps {
 }
 
 export const Navbar = ({ onSearch }: NavbarProps) => {
-  const router = useRouter()
   const [showSharePopup, setShowSharePopup] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -55,19 +52,7 @@ export const Navbar = ({ onSearch }: NavbarProps) => {
   }
 
   const handleDonate = () => {
-    window.open('https://buymeacoffee.com/watchly', '_blank')
-  }
-
-  const handleFavorites = () => {
-    router.push('/favorite-movie')
-  }
-
-  const handleGameMovie = () => {
-    router.push('/GamePage')
-  }
-
-  const handleHome = () => {
-    router.push('/MainMovies')
+    window.open('https://ko-fi.com/mahmoudapp', '_blank')
   }
 
   const copyToClipboard = () => {
@@ -98,11 +83,8 @@ export const Navbar = ({ onSearch }: NavbarProps) => {
     <>
       <header className="glass-sidebar flex justify-between items-center py-4 px-6 mx-6 mt-4 rounded-2xl border border-border/20 backdrop-blur-md">
         
-        {/* Logo Section */}
-        <button
-          onClick={handleHome}
-          className="flex items-center space-x-3 group cursor-pointer transition-all duration-200 hover:scale-105 min-w-0 flex-shrink-0"
-        >
+        {/* Logo Section - Now using Link */}
+        <Link href="/home" className="flex items-center space-x-3 group cursor-pointer transition-all duration-200 hover:scale-105 min-w-0 flex-shrink-0">
           <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-primary/25 transition-all">
             <Film className="w-6 h-6 text-white" />
           </div>
@@ -110,7 +92,7 @@ export const Navbar = ({ onSearch }: NavbarProps) => {
             <span className="text-text-primary font-bold text-xl leading-5 truncate">Watchly</span>
             <span className="text-text-secondary text-xs font-medium">Movie Explorer</span>
           </div>
-        </button>
+        </Link>
 
         {/* Search Bar - Centered */}
         <div className="flex-1 max-w-2xl mx-8">
@@ -142,15 +124,15 @@ export const Navbar = ({ onSearch }: NavbarProps) => {
         <div className="flex items-center space-x-3 min-w-0 flex-shrink-0">
           {/* Action Buttons */}
           <div className="hidden lg:flex items-center space-x-2">
-            {/* Favorites */}
-            <button
-              onClick={handleFavorites}
+            {/* Favorites - Now using Link */}
+            <Link 
+              href="/favorite-movie"
               className="glass px-4 py-2 rounded-xl border border-border/20 hover:border-primary/30 transition-all duration-200 flex items-center space-x-2 group hover:scale-105"
               title="My Favorites"
             >
               <Heart className="w-5 h-5 text-text-secondary group-hover:text-red-400 group-hover:fill-red-400 transition-colors" />
               <span className="text-text-primary font-medium text-sm">Favorites</span>
-            </button>
+            </Link>
 
             {/* Share */}
             <button
@@ -170,25 +152,25 @@ export const Navbar = ({ onSearch }: NavbarProps) => {
             >
               <Gift className="w-5 h-5" />
               <span className="text-white font-medium text-sm">Donate</span>
-            </button>
+            </button> 
           </div>
 
           {/* Mobile Action Buttons */}
           <div className="flex lg:hidden items-center space-x-2">
-            <button
-              onClick={handleFavorites}
+            <Link 
+              href="/favorite-movie"
               className="glass p-3 rounded-xl border border-border/20 hover:border-primary/30 transition-all duration-200 hover:scale-105"
               title="Favorites"
             >
               <Heart className="w-5 h-5 text-text-secondary" />
-            </button>
-            <button
-              onClick={handleGameMovie}
+            </Link>
+            <Link 
+              href="/movie-trivia"
               className="glass p-3 rounded-xl border border-border/20 hover:border-primary/30 transition-all duration-200 hover:scale-105"
               title="Game"
             >
               <Gamepad2 className="w-5 h-5 text-text-secondary" />
-            </button>
+            </Link>
           </div>
 
           {/* Theme Toggle */}
@@ -196,14 +178,14 @@ export const Navbar = ({ onSearch }: NavbarProps) => {
             <ThemeToggle />
           </div>
 
-          {/* Main Game Button */}
-          <button 
-            onClick={handleGameMovie}
+          {/* Main Game Button - Now using Link */}
+          <Link 
+            href="/movie-trivia"
             className="bg-primary text-white px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 hover:scale-105 flex items-center space-x-2 shadow-lg shadow-primary/25 hover:shadow-primary/40"
           >
             <Target className="w-5 h-5" />
             <span className="hidden sm:block">Play Game</span>
-          </button>
+          </Link>
         </div>
       </header>
 

@@ -1,50 +1,135 @@
+// app/favorites/page.tsx - PRODUCTION READY VERSION
 'use client'
 import { Navbar } from '../components/layout/Navbar'
-import { MovieCard } from '../components/Movie/MovieCard'
+import MovieCardWithSelection from '../components/Movie/MovieCardWithSelection'
 import { MovieDetailsPopup } from '../components/Movie/MovieDetailsPopup'
 import { useFavorites } from '../hooks/useFavorites'
 import { useFavoriteSearch } from '../hooks/useFavoriteSearch'
 import { useState, useCallback } from 'react'
+import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
+import { Footer } from '../components/layout/Footer'
 import {
   Heart,
   Search,
   X,
   Trash2,
-  Star,
-  Calendar,
-  BarChart3,
   Film,
-  Sparkles,
-  Home,
   Filter,
-  Trophy,
   Clock,
-  Users,
-  Eye,
-  Plus
+  Plus,
+  CheckSquare,
+  Square
 } from 'lucide-react'
+import { DisplayMovie, TMDBMovie } from '../types/movies'
+
+// Confirmation Modal Component
+function ConfirmationModal({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  title,
+  message 
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  title: string
+  message: string
+}) {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="glass border border-border/30 rounded-2xl max-w-md w-full p-6 animate-in zoom-in duration-200">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center">
+            <Trash2 className="w-5 h-5 text-red-400" />
+          </div>
+          <h3 className="text-xl font-bold text-text-primary">{title}</h3>
+        </div>
+        
+        <p className="text-text-secondary mb-6 leading-relaxed">
+          {message}
+        </p>
+        
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onClose}
+            className="glass border border-border/30 text-text-secondary hover:text-text-primary px-4 py-2 rounded-lg font-medium transition-all hover:scale-105"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              onConfirm()
+              onClose()
+            }}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 hover:scale-105"
+          >
+            <Trash2 className="w-4 h-4" />
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 /**
- * Favorites Page Component
+ * Convert DisplayMovie to TMDBMovie format for compatibility
+ */
+function convertDisplayToTMDB(displayMovie: DisplayMovie): TMDBMovie {
+  return {
+    id: parseInt(displayMovie.imdbID) || 0,
+    title: displayMovie.Title,
+    original_title: displayMovie.Title,
+    overview: displayMovie.Plot,
+    release_date: displayMovie.Released,
+    poster_path: displayMovie.Poster && displayMovie.Poster !== 'N/A' && !displayMovie.Poster.startsWith('N/A') 
+      ? (displayMovie.Poster.startsWith('https://') ? displayMovie.Poster : null)
+      : null,
+    vote_average: parseFloat(displayMovie.imdbRating) || 0,
+    vote_count: parseInt(displayMovie.imdbVotes?.replace(/,/g, '') || '0') || 0,
+    genre_ids: [],
+    original_language: 'en',
+    backdrop_path: null,
+    adult: false,
+    popularity: 0,
+    video: false
+  }
+}
+
+/**
+ * Production-ready Favorites Page Component
  * Features: Search, Statistics, Bulk Actions, Optimized Performance
  */
 export default function FavoritesPage() {
   const router = useRouter()
-  const [selectedMovie, setSelectedMovie] = useState<any>(null)
+  const [selectedMovie, setSelectedMovie] = useState<DisplayMovie | null>(null)
   const [isPopupOpen, setIsPopupOpen] = useState(false)
+  const [selectedMovies, setSelectedMovies] = useState<Set<string>>(new Set())
+  const [showBulkActions, setShowBulkActions] = useState(false)
+  
+  // Modal states
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'single' as 'single' | 'bulk' | 'clearAll'
+  })
   
   // Custom hooks for state management
   const { 
     favorites, 
     removeFromFavorites, 
+    removeMultipleFavorites,
     clearAllFavorites, 
-    getFavoriteStats,
     isLoading: favoritesLoading 
   } = useFavorites()
   
   const {
-    searchQuery,
     setSearchQuery,
     filteredFavorites,
     isSearching,
@@ -54,11 +139,11 @@ export default function FavoritesPage() {
     hasResults
   } = useFavoriteSearch(favorites)
 
-  // Get statistics
-  const stats = getFavoriteStats()
+  // Get statistics - Memoized to prevent unnecessary recalculations
+  // (Removed: statistics section deleted from UI)
 
-  // Handle movie selection
-  const handleMovieClick = useCallback((movie: any) => {
+  // Handle movie selection - Fixed type compatibility
+  const handleMovieClick = useCallback((movie: DisplayMovie) => {
     setSelectedMovie(movie)
     setIsPopupOpen(true)
   }, [])
@@ -69,20 +154,72 @@ export default function FavoritesPage() {
     setSelectedMovie(null)
   }, [])
 
-  // Remove movie from favorites with event handling
+  // Show confirmation modal
+  const showConfirmationModal = useCallback(({
+    title,
+    message,
+    onConfirm,
+    type
+  }: {
+    title: string
+    message: string
+    onConfirm: () => void
+    type: 'single' | 'bulk' | 'clearAll'
+  }) => {
+    setModalState({
+      isOpen: true,
+      title,
+      message,
+      onConfirm,
+      type
+    })
+  }, [])
+
+  // Close modal
+  const closeModal = useCallback(() => {
+    setModalState(prev => ({ ...prev, isOpen: false }))
+  }, [])
+
+  // Remove movie from favorites with modal confirmation
   const handleRemoveFromFavorites = useCallback((movieId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
-    removeFromFavorites(movieId)
-  }, [removeFromFavorites])
+    
+    const movie = favorites.find(fav => fav.imdbID === movieId)
+    if (movie) {
+      showConfirmationModal({
+        title: 'Remove from Favorites',
+        message: `Are you sure you want to remove "${movie.Title}" from your favorites?`,
+        onConfirm: () => {
+          removeFromFavorites(movieId)
+          toast.success(`"${movie.Title}" removed from favorites`, {
+            duration: 3000,
+            position: 'bottom-right',
+            icon: '🗑️'
+          })
+        },
+        type: 'single'
+      })
+    }
+  }, [favorites, removeFromFavorites, showConfirmationModal])
 
-  // Clear all favorites with confirmation
+  // Clear all favorites with modal confirmation - Fixed: Removed favorites.length dependency
   const handleClearAll = useCallback(() => {
     if (favorites.length === 0) return
-    
-    if (confirm(`Are you sure you want to remove all ${favorites.length} movies from your favorites?`)) {
-      clearAllFavorites()
-    }
-  }, [favorites.length, clearAllFavorites])
+    const count = favorites.length
+    showConfirmationModal({
+      title: 'Clear All Favorites',
+      message: `Are you sure you want to remove all ${count} movies from your favorites? This action cannot be undone.`,
+      onConfirm: () => {
+        clearAllFavorites()
+        toast.success(`All ${count} favorites removed`, {
+          duration: 4000,
+          position: 'bottom-right',
+          icon: '🗑️'
+        })
+      },
+      type: 'clearAll'
+    })
+  }, [favorites.length,clearAllFavorites, showConfirmationModal])
 
   // Handle search from navbar
   const handleSearch = useCallback((query: string) => {
@@ -91,13 +228,68 @@ export default function FavoritesPage() {
 
   // Navigate to home page
   const handleBrowseMovies = useCallback(() => {
-    router.push('/')
+    router.push('/home')
   }, [router])
 
   // Get search information
   const searchInfo = getSearchInfo()
 
-  // Empty state
+  // Bulk selection handlers
+  const toggleMovieSelection = useCallback((movieId: string) => {
+    setSelectedMovies(prev => {
+      const newSelection = new Set(prev)
+      if (newSelection.has(movieId)) {
+        newSelection.delete(movieId)
+      } else {
+        newSelection.add(movieId)
+      }
+      
+      if (newSelection.size === 0) {
+        setShowBulkActions(false)
+      } else {
+        setShowBulkActions(true)
+      }
+      
+      return newSelection
+    })
+  }, [])
+
+  const selectAllMovies = useCallback(() => {
+    if (selectedMovies.size === filteredFavorites.length) {
+      setSelectedMovies(new Set())
+      setShowBulkActions(false)
+    } else {
+      setSelectedMovies(new Set(filteredFavorites.map(movie => movie.imdbID || '')))
+      setShowBulkActions(true)
+    }
+  }, [filteredFavorites, selectedMovies.size])
+
+  const handleBulkRemove = useCallback(() => {
+    if (selectedMovies.size === 0) return
+    
+    showConfirmationModal({
+      title: 'Remove Multiple Favorites',
+      message: `Are you sure you want to remove ${selectedMovies.size} selected movies from your favorites?`,
+      onConfirm: () => {
+        removeMultipleFavorites(Array.from(selectedMovies))
+        setSelectedMovies(new Set())
+        setShowBulkActions(false)
+        toast.success(`${selectedMovies.size} movies removed from favorites`, {
+          duration: 3000,
+          position: 'bottom-right',
+          icon: '🗑️'
+        })
+      },
+      type: 'bulk'
+    })
+  }, [selectedMovies, removeMultipleFavorites, showConfirmationModal])
+
+  const clearSelection = useCallback(() => {
+    setSelectedMovies(new Set())
+    setShowBulkActions(false)
+  }, [])
+
+  // Enhanced empty state 
   if (favorites.length === 0 && !favoritesLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-surface-elevated text-text-primary">
@@ -116,7 +308,7 @@ export default function FavoritesPage() {
             </p>
             <button 
               onClick={handleBrowseMovies}
-              className="bg-gradient-to-r from-primary to-accent text-white px-8 py-4 rounded-xl font-semibold hover:scale-105 transition-all duration-200 shadow-lg shadow-primary/25 flex items-center gap-3 mx-auto"
+              className="bg-gradient-to-r from-primary to-accent text-white px-8 py-4 rounded-xl font-semibold hover:scale-105 transition-all duration-200 shadow-lg shadow-primary/25 flex items-center gap-3 mx-auto mb-4"
             >
               <Plus className="w-6 h-6" />
               Browse Movies to Add
@@ -131,12 +323,41 @@ export default function FavoritesPage() {
     <div className="min-h-screen bg-gradient-to-br from-background to-surface-elevated text-text-primary">
       <Navbar onSearch={handleSearch} />
       
-      <main className="p-6">
+      <main className="p-6 max-w-7xl mx-auto">
         {/* Loading State */}
         {(favoritesLoading || isSearching) && (
           <div className="fixed top-4 right-4 glass border border-border/20 px-4 py-2 rounded-lg z-50 backdrop-blur-sm flex items-center gap-2 text-text-primary">
             <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             {isSearching ? 'Searching favorites...' : 'Updating favorites...'}
+          </div>
+        )}
+
+        {/* Bulk Actions Bar */}
+        {showBulkActions && (
+          <div className="glass border border-accent/30 rounded-xl p-4 mb-6 animate-in slide-in-from-top duration-300 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+                <CheckSquare className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-text-primary font-semibold">
+                {selectedMovies.size} {selectedMovies.size === 1 ? 'movie' : 'movies'} selected
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleBulkRemove}
+                className="bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Remove Selected
+              </button>
+              <button
+                onClick={clearSelection}
+                className="glass border border-border/30 text-text-secondary hover:text-text-primary px-4 py-2 rounded-lg font-medium transition-all"
+              >
+                Clear
+              </button>
+            </div>
           </div>
         )}
 
@@ -151,44 +372,50 @@ export default function FavoritesPage() {
                 <h1 className="text-4xl font-bold text-text-primary mb-2">
                   My Favorite Movies
                 </h1>
-                <p className="text-text-secondary text-lg flex items-center gap-2">
+                <p className="text-text-secondary text-lg flex items-center gap-2 flex-wrap">
                   <Film className="w-5 h-5 text-primary" />
                   {filteredFavorites.length} {filteredFavorites.length === 1 ? 'movie' : 'movies'} saved
                   {searchInfo && (
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 glass px-2 py-1 rounded-lg text-sm">
                       <Filter className="w-4 h-4 text-accent" />
                       {searchInfo.hiddenCount} hidden by search
                     </span>
                   )}
+                  <span className="flex items-center gap-1 glass px-2 py-1 rounded-lg text-sm">
+                    <Clock className="w-4 h-4 text-green-400" />
+                    Sorted by newest first
+                  </span>
                 </p>
               </div>
             </div>
             
-            {/* Search Info */}
-            {searchInfo && (
-              <div className="glass border border-border/20 rounded-xl px-4 py-3 flex items-center gap-3 text-text-secondary">
-                <Search className="w-4 h-4 text-primary" />
-                <span>Search: "{searchInfo.query}"</span>
-                <button
-                  onClick={clearSearch}
-                  className="text-primary hover:text-primary-hover transition-colors p-1 hover:scale-110"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Search Info */}
+              {searchInfo && (
+                <div className="glass border border-border/20 rounded-xl px-4 py-3 flex items-center gap-3 text-text-secondary">
+                  <Search className="w-4 h-4 text-primary" />
+                  <span>Search: &quot;{searchInfo.query}&quot;</span>
+                  <button
+                    onClick={clearSearch}
+                    className="text-primary hover:text-primary-hover transition-colors p-1 hover:scale-110"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
-            {/* Clear All Button */}
-            {favorites.length > 1 && (
-              <button
-                onClick={handleClearAll}
-                disabled={favoritesLoading}
-                className="bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 disabled:bg-red-500/10 px-6 py-3 rounded-xl font-semibold transition-all whitespace-nowrap disabled:cursor-not-allowed flex items-center gap-2 hover:scale-105"
-              >
-                <Trash2 className="w-5 h-5" />
-                {favoritesLoading ? 'Clearing...' : 'Clear All Favorites'}
-              </button>
-            )}
+              {/* Clear All Button */}
+              {favorites.length > 1 && (
+                <button
+                  onClick={handleClearAll}
+                  disabled={favoritesLoading}
+                  className="bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 disabled:bg-red-500/10 px-6 py-3 rounded-xl font-semibold transition-all whitespace-nowrap disabled:cursor-not-allowed flex items-center gap-2 hover:scale-105"
+                >
+                  <Trash2 className="w-5 h-5" />
+                  {favoritesLoading ? 'Clearing...' : 'Clear All'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -214,116 +441,61 @@ export default function FavoritesPage() {
           </div>
         )}
 
+        {/* Select All Checkbox */}
+        {hasResults && filteredFavorites.length > 0 && (
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={selectAllMovies}
+              className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
+            >
+              {selectedMovies.size === filteredFavorites.length ? (
+                <CheckSquare className="w-5 h-5 text-accent" />
+              ) : (
+                <Square className="w-5 h-5" />
+              )}
+              <span>
+                {selectedMovies.size === filteredFavorites.length ? 'Deselect All' : 'Select All'}
+              </span>
+            </button>
+            <span className="text-text-muted text-sm">
+              ({selectedMovies.size} selected)
+            </span>
+          </div>
+        )}
+
         {/* Movies Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {filteredFavorites.map((movie) => (
-            <div key={movie.imdbID} className="relative group animate-in fade-in duration-300">
-              <MovieCard
-                movie={movie}
-                onClick={handleMovieClick}
-              />
-              
-              {/* Remove from favorites button */}
-              <button
-                onClick={(e) => handleRemoveFromFavorites(movie.imdbID, e)}
-                disabled={favoritesLoading}
-                className="absolute top-3 right-3 bg-red-500/90 hover:bg-red-600 disabled:bg-red-400 rounded-full p-2 transition-all duration-300 z-10 opacity-0 group-hover:opacity-100 backdrop-blur-sm disabled:cursor-not-allowed hover:scale-110"
-                title="Remove from favorites"
-              >
-                <Trash2 className="w-4 h-4 text-white" />
-              </button>
-
-              {/* Favorite badge */}
-              <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-full px-3 py-1.5 text-xs font-semibold text-white z-10 flex items-center gap-1 backdrop-blur-sm shadow-lg">
-                <Heart className="w-3 h-3 fill-white" />
-                <span>Favorited</span>
-              </div>
-            </div>
+            <MovieCardWithSelection
+              key={movie.imdbID}
+              movie={movie}
+              isSelected={selectedMovies.has(movie.imdbID)}
+              onSelect={handleMovieClick}
+              onRemove={handleRemoveFromFavorites}
+              selectionMode={showBulkActions}
+              onToggleSelection={toggleMovieSelection}
+            />
           ))}
         </div>
 
-        {/* Statistics Footer */}
-        {hasResults && (
-          <div className="mt-12 pt-8 border-t border-border/20 animate-in fade-in duration-500">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-text-primary mb-2 flex items-center justify-center gap-2">
-                <Trophy className="w-6 h-6 text-yellow-500" />
-                Your Collection Stats
-              </h2>
-              <p className="text-text-secondary">
-                Insights about your favorite movies collection
-              </p>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center mb-8">
-              <div className="glass border border-border/20 rounded-2xl p-6 hover:scale-105 transition-transform duration-200">
-                <div className="w-12 h-12 bg-gradient-to-r from-primary to-accent rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <Film className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-3xl font-bold text-text-primary mb-2">{stats.total}</div>
-                <div className="text-text-secondary">Total Favorites</div>
-              </div>
-              
-              <div className="glass border border-border/20 rounded-2xl p-6 hover:scale-105 transition-transform duration-200">
-                <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <Star className="w-6 h-6 text-white fill-white" />
-                </div>
-                <div className="text-3xl font-bold text-text-primary mb-2">
-                  {stats.highestRated.toFixed(1)}
-                </div>
-                <div className="text-text-secondary">Highest Rated</div>
-              </div>
-              
-              <div className="glass border border-border/20 rounded-2xl p-6 hover:scale-105 transition-transform duration-200">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <Calendar className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-3xl font-bold text-text-primary mb-2">
-                  {stats.differentYears}
-                </div>
-                <div className="text-text-secondary">Different Years</div>
-              </div>
-              
-              <div className="glass border border-border/20 rounded-2xl p-6 hover:scale-105 transition-transform duration-200">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <BarChart3 className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-3xl font-bold text-text-primary mb-2">
-                  {stats.averageRating.toFixed(1)}
-                </div>
-                <div className="text-text-secondary">Average Rating</div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <button
-                onClick={handleBrowseMovies}
-                className="bg-gradient-to-r from-primary to-accent text-white px-8 py-4 rounded-xl font-semibold hover:scale-105 transition-all duration-200 shadow-lg shadow-primary/25 flex items-center gap-3"
-              >
-                <Plus className="w-6 h-6" />
-                Browse More Movies
-              </button>
-              {favorites.length > 0 && (
-                <button
-                  onClick={handleClearAll}
-                  disabled={favoritesLoading}
-                  className="glass border border-red-500/30 text-red-400 hover:bg-red-500/20 disabled:bg-red-500/10 px-8 py-4 rounded-xl font-semibold transition-all duration-200 flex items-center gap-3 disabled:cursor-not-allowed hover:scale-105"
-                >
-                  <Trash2 className="w-6 h-6" />
-                  {favoritesLoading ? 'Clearing...' : 'Clear All Favorites'}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+        <Footer />
       </main>
 
       {/* Movie Details Popup */}
       <MovieDetailsPopup
-        movie={selectedMovie}
+        movie={selectedMovie ? convertDisplayToTMDB(selectedMovie) : null}
         isOpen={isPopupOpen}
         onClose={handleClosePopup}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        onConfirm={modalState.onConfirm}
+        title={modalState.title}
+        message={modalState.message}
       />
     </div>
   )

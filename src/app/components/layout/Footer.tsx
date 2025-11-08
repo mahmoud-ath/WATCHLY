@@ -1,6 +1,6 @@
 // components/layout/Footer.tsx
 'use client'
-
+import Link from 'next/link'
 import {
   Film,
   Heart,
@@ -22,7 +22,7 @@ export const Footer = () => {
   const currentYear = new Date().getFullYear()
 
   const quickLinks = [
-    { name: 'Browse Movies', href: '/', icon: Film },
+    { name: 'Browse Movies', href: '/home', icon: Film },
     { name: 'Favorites', href: '/favorite-movie', icon: Heart },
     { name: 'Movie Game', href: '/gamemovie', icon: Star }
   ]
@@ -40,25 +40,23 @@ export const Footer = () => {
     { label: 'Ratings', value: '1M+', icon: Star }
   ]
 
-  
-
   return (
     <footer className="bg-surface border-t border-border/20 mt-16 pt-8">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-6 pb-8">
         {/* Top Section - Brand & Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Brand Section */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center">
+            <Link href="/home" className="flex items-center gap-3 mb-4 group">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Film className="w-6 h-6 text-white" />
               </div>
               <div>
-                <span className="text-2xl font-bold text-text-primary">Watchly</span>
+                <span className="text-2xl font-bold text-text-primary group-hover:text-primary transition-colors">Watchly</span>
                 <div className="text-text-secondary text-sm">Movie Explorer</div>
               </div>
-            </div>
+            </Link>
             <p className="text-text-secondary text-sm mb-4 leading-relaxed">
               Your ultimate movie companion. Discover, save, and share your favorite films with advanced search, 
               personalized recommendations, and fun trivia games.
@@ -82,7 +80,7 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links - FIXED: Using Link instead of <a> */}
           <div className="lg:col-span-1">
             <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
@@ -93,20 +91,18 @@ export const Footer = () => {
                 const IconComponent = link.icon
                 return (
                   <li key={link.name}>
-                    <a
+                    <Link
                       href={link.href}
                       className="flex items-center gap-2 text-text-secondary hover:text-primary transition-all duration-200 group text-sm"
                     >
                       <IconComponent className="w-4 h-4 group-hover:scale-110 transition-transform" />
                       <span>{link.name}</span>
-                    </a>
+                    </Link>
                   </li>
                 )
               })}
             </ul>
           </div>
-
-          
 
           {/* Stats */}
           <div className="lg:col-span-1">
@@ -138,8 +134,8 @@ export const Footer = () => {
             Love using Watchly? Help us keep the lights on and continue improving your movie experience. 
             Every contribution helps us add more features and maintain the service.
           </p>
-          <a
-            href="https://buymeacoffee.com/watchly"
+          <Link
+            href="https://ko-fi.com/mahmoudapp"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:scale-105 transition-all duration-200 shadow-lg shadow-yellow-500/25"
@@ -147,7 +143,7 @@ export const Footer = () => {
             <Coffee className="w-5 h-5" />
             Buy Me a Coffee
             <ExternalLink className="w-4 h-4" />
-          </a>
+          </Link>
         </div>
 
         {/* Bottom Bar */}
@@ -160,17 +156,17 @@ export const Footer = () => {
               <span>for movie lovers everywhere.</span>
             </div>
 
-            {/* Legal Links */}
+            {/* Legal Links - Consider using Link if these are internal pages */}
             <div className="flex items-center gap-6 text-sm">
-              <a href="/privacy" className="text-text-secondary hover:text-primary transition-colors">
+              <Link href="/privacy" className="text-text-secondary hover:text-primary transition-colors">
                 Privacy Policy
-              </a>
-              <a href="/terms" className="text-text-secondary hover:text-primary transition-colors">
+              </Link>
+              <Link href="/terms" className="text-text-secondary hover:text-primary transition-colors">
                 Terms of Service
-              </a>
-              <a href="/about" className="text-text-secondary hover:text-primary transition-colors">
+              </Link>
+              <Link href="/about" className="text-text-secondary hover:text-primary transition-colors">
                 About
-              </a>
+              </Link>
             </div>
           </div>
         </div>

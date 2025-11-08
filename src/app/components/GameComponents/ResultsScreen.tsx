@@ -18,7 +18,6 @@ import {
 interface ResultsScreenProps {
   score: number;
   totalQuestions: number;
-  accuracy?: number;
   gameDuration?: number;
   averageTime?: number;
   maxStreak?: number;
@@ -26,15 +25,14 @@ interface ResultsScreenProps {
   onExploreMovies: () => void;
 }
 
-export const ResultsScreen = ({ 
-  score, 
-  totalQuestions, 
-  accuracy = 0,
+export const ResultsScreen = ({
+  score,
+  totalQuestions,
   gameDuration = 0,
   averageTime = 0,
   maxStreak = 0,
-  onPlayAgain, 
-  onExploreMovies 
+  onPlayAgain,
+  onExploreMovies
 }: ResultsScreenProps) => {
   const getResultData = () => {
     const percentage = (score / totalQuestions) * 100;
@@ -86,7 +84,6 @@ export const ResultsScreen = ({
       };
     }
   };
-
   const result = getResultData();
   const ResultIcon = result.icon;
   const percentage = Math.round((score / totalQuestions) * 100);

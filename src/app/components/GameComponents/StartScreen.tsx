@@ -81,7 +81,7 @@ export const StartScreen = ({ onStartGame }: StartScreenProps) => {
               
               {/* Compact Description */}
               <p className="text-text-secondary text-sm leading-relaxed">
-                Test your movie expertise! From classics to blockbusters, prove you're the ultimate cinephile.
+                Test your movie expertise! From classics to blockbusters, prove you&apos;re the ultimate cinephile.
               </p>
             </div>
 

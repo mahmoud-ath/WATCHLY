@@ -6,7 +6,6 @@ import {
   ChevronDown,
   Check,
   Sparkles,
-  Circle,
   Settings
 } from 'lucide-react'
 
@@ -65,23 +64,6 @@ export const ThemeToggle = () => {
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
   }, [])
-
-  const getThemeIcon = (themeId: string) => {
-    switch (themeId) {
-      case 'purple':
-        return <div className={`w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-purple-600`} />;
-      case 'red':
-        return <div className={`w-3 h-3 rounded-full bg-gradient-to-r from-red-500 to-red-600`} />;
-      case 'orange':
-        return <div className={`w-3 h-3 rounded-full bg-gradient-to-r from-orange-500 to-orange-600`} />;
-      case 'blue':
-        return <div className={`w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600`} />;
-      case 'green':
-        return <div className={`w-3 h-3 rounded-full bg-gradient-to-r from-green-500 to-green-600`} />;
-      default:
-        return <Circle className="w-3 h-3 text-current" />;
-    }
-  }
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -155,13 +137,7 @@ export const ThemeToggle = () => {
             ))}
           </div>
 
-          {/* Footer */}
-          <div className="p-3 border-t border-border/20">
-            <div className="flex items-center gap-2 text-text-secondary text-xs">
-              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-primary to-accent" />
-              <span>Theme affects all components</span>
-            </div>
-          </div>
+          
         </div>
       )}
     </div>

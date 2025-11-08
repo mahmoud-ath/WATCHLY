@@ -44,7 +44,7 @@ export const convertTMDBToDisplay = (tmdbMovie: TMDBMovie): DisplayMovie => {
 /**
  * Filters movies based on current filters with performance optimization
  */
-export const filterMovies = (movies: DisplayMovie[], filters: MovieFilters): DisplayMovie[] => {
+export const filterMovies = (movies: TMDBMovie[], filters: MovieFilters): TMDBMovie[] => {
   if (!movies.length) return []
 
   let result = [...movies]
@@ -53,7 +53,10 @@ export const filterMovies = (movies: DisplayMovie[], filters: MovieFilters): Dis
   if (filters.genres.length > 0) {
     result = result.filter(movie =>
       filters.genres.some(genre => 
-        movie.Genre.toLowerCase().includes(genre.toLowerCase())
+        movie.genre_ids?.some(gId => {
+          // Simple genre ID matching - would need genre mapping for full feature
+          return gId.toString().includes(genre.toLowerCase())
+        }) || false
       )
     )
   }
@@ -62,7 +65,7 @@ export const filterMovies = (movies: DisplayMovie[], filters: MovieFilters): Dis
   if (filters.rating) {
     const minRating = parseInt(filters.rating.charAt(0))
     result = result.filter(movie => {
-      const rating = parseFloat(movie.imdbRating) || 0
+      const rating = movie.vote_average || 0
       return rating >= minRating
     })
   }
@@ -70,7 +73,7 @@ export const filterMovies = (movies: DisplayMovie[], filters: MovieFilters): Dis
   // Apply year filter
   if (filters.year) {
     result = result.filter(movie => {
-      const movieYear = movie.Year
+      const movieYear = movie.release_date ? new Date(movie.release_date).getFullYear().toString() : ''
       return movieYear === filters.year
     })
   }
@@ -106,7 +109,7 @@ export const getRecommendationTitle = (searchQuery: string, filters: MovieFilter
 /**
  * Gets results count text with loading indication
  */
-export const getResultsCountText = (filteredMovies: DisplayMovie[], currentPage: number, totalPages: number): string => {
+export const getResultsCountText = (filteredMovies: TMDBMovie[], currentPage: number, totalPages: number): string => {
   if (filteredMovies.length === 0) return "No movies found"
   if (filteredMovies.length === 1) return "1 movie found"
   return `${filteredMovies.length} movies found${currentPage < totalPages ? ' (scroll to load more)' : ''}`

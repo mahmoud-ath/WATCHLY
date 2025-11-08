@@ -111,19 +111,18 @@ export const getGenres = async (): Promise<TMDBGenres> => {
 
 // Search movies
 export const searchMovies = async (
-  query: string, 
+  query: string,
   page: number = 1,
-  year?: string,
-  genre?: string
+  year?: string
 ): Promise<TMDBSearchResult> => {
   await delay(200); // Rate limiting
-  
+
   let url = `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&language=en-US&query=${encodeURIComponent(query)}&page=${page}&include_adult=false`;
-  
+
   if (year) {
     url += `&year=${year}`;
   }
-  
+
   const response = await fetch(url);
   return handleResponse(response);
 };
@@ -223,18 +222,18 @@ export const getMoviesByGenre = async (genreId: number, page: number = 1): Promi
 };
 
 // Convert TMDB movie to a format similar to your existing OMDB structure
-export const convertToOMDBFormat = (tmdbMovie: TMDBMovie | TMDBMovieDetails): any => {
+export const convertToOMDBFormat = (tmdbMovie: TMDBMovie | TMDBMovieDetails): Record<string, unknown> => {
   const isDetails = 'genres' in tmdbMovie;
-  
+
   return {
     imdbID: tmdbMovie.id.toString(),
     Title: tmdbMovie.title,
     Year: tmdbMovie.release_date ? tmdbMovie.release_date.split('-')[0] : 'N/A',
     Rated: 'N/A', // TMDB doesn't have this
     Released: tmdbMovie.release_date || 'N/A',
-    Runtime: isDetails ? (tmdbMovie.runtime ? `${tmdbMovie.runtime} min` : 'N/A') : 'N/A',
-    Genre: isDetails 
-      ? tmdbMovie.genres.map(g => g.name).join(', ')
+    Runtime: isDetails ? ((tmdbMovie as TMDBMovieDetails).runtime ? `${(tmdbMovie as TMDBMovieDetails).runtime} min` : 'N/A') : 'N/A',
+    Genre: isDetails
+      ? (tmdbMovie as TMDBMovieDetails).genres.map(g => g.name).join(', ')
       : 'N/A', // For basic movie objects, we don't have genre names
     Director: 'N/A', // Would need credits for this
     Writer: 'N/A', // Would need credits for this

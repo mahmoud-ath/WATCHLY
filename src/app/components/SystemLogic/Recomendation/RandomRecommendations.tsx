@@ -10,13 +10,15 @@ import {
   Trophy,
   Award
 } from 'lucide-react'
+import type { TMDBMovie } from '../../../types/movies'
 
 interface RandomRecommendationsProps {
-  recommendations: any[]
+  recommendations: TMDBMovie[]
   onShuffle: () => void
-  onMovieClick: (movie: any) => void
-  onAddToFavorites?: (movie: any) => void
-  onRemoveFromFavorites?: (movie: any) => void
+  onMovieClick: (movie: TMDBMovie) => void
+  onAddToFavorites?: (movie: TMDBMovie) => void
+  onRemoveFromFavorites?: (movie: TMDBMovie) => void
+  isFavorite?: (movieId: number) => boolean
 }
 
 export const RandomRecommendations = ({ 
@@ -24,7 +26,8 @@ export const RandomRecommendations = ({
   onShuffle, 
   onMovieClick,
   onAddToFavorites,
-  onRemoveFromFavorites
+  onRemoveFromFavorites,
+  
 }: RandomRecommendationsProps) => {
   const rankIcons = [Crown, Trophy, Award, Star, Zap, Sparkles]
   
@@ -79,7 +82,7 @@ export const RandomRecommendations = ({
         {/* Movies Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recommendations.map((movie, index) => (
-            <div key={`random-${movie.imdbID}-${index}`} className="relative group">
+            <div key={`random-${movie.id}-${index}`} className="relative group">
               {/* Rank Badge */}
               <div className={`absolute -top-3 -left-3 z-20 bg-gradient-to-r ${getRankColor(index)} text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 min-w-[80px] justify-center`}>
                 {getRankIcon(index)}

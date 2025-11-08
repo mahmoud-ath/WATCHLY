@@ -1,32 +1,23 @@
 // components/Movie/MovieDetailsPopup.tsx
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useFavorites } from '../../hooks/useFavorites'
+import Image from 'next/image'
 import {
   X,
   Heart,
   ExternalLink,
   Star,
   Calendar,
-  Clock,
   Languages,
   Film,
   Play,
   Sparkles,
-  ThumbsUp,
-  Award,
   Eye
 } from 'lucide-react'
+import { TMDBMovie, DisplayMovie } from '../../types/movies'
 
-interface MovieDetailsPopupProps {
-  movie: any
-  isOpen: boolean
-  onClose: () => void
-  onAddToFavorites?: (movie: any) => void
-  onRemoveFromFavorites?: (movie: any) => void
-  onMovieClick?: (movie: any) => void // Add this prop for similar movie clicks
-}
-
+// Use TMDB Movie directly
 interface SimilarMovie {
   id: number
   title: string
@@ -34,47 +25,76 @@ interface SimilarMovie {
   release_date: string
   vote_average: number
   overview?: string
-  genre_ids?: number[]
-  adult?: boolean
-  original_language?: string
 }
 
-export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, onRemoveFromFavorites, onMovieClick }: MovieDetailsPopupProps) {
+interface MovieDetailsPopupProps {
+  movie: TMDBMovie | null
+  isOpen: boolean
+  onClose: () => void
+  onAddToFavorites?: (movie: TMDBMovie) => void
+  onRemoveFromFavorites?: (movie: TMDBMovie) => void
+  onMovieClick?: (movie: TMDBMovie) => void
+}
+
+export function MovieDetailsPopup({ 
+  movie, 
+  isOpen, 
+  onClose, 
+  onAddToFavorites, 
+  onRemoveFromFavorites, 
+  onMovieClick 
+}: MovieDetailsPopupProps) {
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites()
   const [similarMovies, setSimilarMovies] = useState<SimilarMovie[]>([])
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false)
+  const [similarError, setSimilarError] = useState<string | null>(null)
   const [isMovieFavorite, setIsMovieFavorite] = useState(false)
 
-  // Check if movie is favorite when component mounts or movie changes
+  // Check if movie is favorite
   useEffect(() => {
     if (movie) {
-      const movieId = movie.imdbID || movie.id?.toString()
-      setIsMovieFavorite(isFavorite(movieId))
+      setIsMovieFavorite(isFavorite(movie.id.toString()))
     }
   }, [movie, isFavorite])
 
-  // Fetch similar movies when popup opens
-  useEffect(() => {
-    if (isOpen && movie && movie.id) {
-      fetchSimilarMovies(movie.id)
-    }
-  }, [isOpen, movie])
+  const fetchSimilarMovies = useCallback(async () => {
+    if (!movie?.id) return
 
-  const fetchSimilarMovies = async (movieId: number) => {
     setIsLoadingSimilar(true)
+    setSimilarError(null)
+    
     try {
       const response = await fetch(
-        `https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}`
+        `https://api.themoviedb.org/3/movie/${movie.id}/similar?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}`
       )
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch similar movies')
+      }
+
       const data = await response.json()
-      setSimilarMovies(data.results?.slice(0, 6) || [])
+      const results = data.results?.slice(0, 6) || []
+      
+      if (results.length === 0) {
+        setSimilarError('No similar movies found')
+      }
+      
+      setSimilarMovies(results)
     } catch (error) {
-      console.error('Failed to fetch similar movies:', error)
+      console.error('Error fetching similar movies:', error)
+      setSimilarError('Unable to load similar movies')
       setSimilarMovies([])
     } finally {
       setIsLoadingSimilar(false)
     }
-  }
+  }, [movie?.id])
+
+  // Fetch similar movies when popup opens
+  useEffect(() => {
+    if (isOpen && movie?.id) {
+      fetchSimilarMovies()
+    }
+  }, [isOpen, movie?.id, fetchSimilarMovies])
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -89,78 +109,67 @@ export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, on
   }
 
   const handleFavoriteToggle = () => {
-  if (!movie) return
-  
-  const movieId = movie.imdbID || movie.id?.toString()
-  
-  if (isMovieFavorite) {
-    removeFromFavorites(movieId)
-    if (onRemoveFromFavorites) {
-      onRemoveFromFavorites(movie)
+    if (!movie) return
+    
+    if (isMovieFavorite) {
+      removeFromFavorites(movie.id.toString())
+      if (onRemoveFromFavorites) {
+        onRemoveFromFavorites(movie)
+      }
+    } else {
+      // Convert TMDBMovie to DisplayMovie for storage
+      const displayMovie: DisplayMovie = {
+        imdbID: movie.id.toString(),
+        Title: movie.title || movie.original_title || 'Unknown',
+        Year: movie.release_date ? new Date(movie.release_date).getFullYear().toString() : 'N/A',
+        Rated: 'N/A',
+        Released: movie.release_date || 'N/A',
+        Runtime: 'N/A',
+        Genre: 'N/A',
+        Director: 'N/A',
+        Writer: 'N/A',
+        Actors: 'N/A',
+        Plot: movie.overview || '',
+        Language: movie.original_language?.toUpperCase() || 'N/A',
+        Country: 'N/A',
+        Awards: 'N/A',
+        Poster: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder-poster.jpg',
+        Ratings: [],
+        Metascore: 'N/A',
+        imdbRating: movie.vote_average?.toString() || 'N/A',
+        imdbVotes: movie.vote_count?.toString() || '0',
+        Type: 'movie',
+        DVD: 'N/A',
+        BoxOffice: 'N/A',
+        Production: 'N/A',
+        Website: 'N/A',
+        Response: 'True'
+      }
+      addToFavorites(displayMovie)
+      if (onAddToFavorites) {
+        onAddToFavorites(movie)
+      }
     }
-  } else {
-    const favoriteMovie = {
-      id: movie.id,
-      imdbID: movieId,
-      Title: movie.Title || movie.title,
-      Year: movie.Year || (movie.release_date ? new Date(movie.release_date).getFullYear().toString() : 'N/A'),
-      Rated: movie.Rated || (movie.adult ? 'R' : 'PG-13') || 'N/A',
-      Released: movie.Released || movie.release_date || 'N/A',
-      Runtime: movie.Runtime || 'N/A',
-      Genre: movie.Genre || (movie.genres ? movie.genres.map((g: any) => g.name).join(', ') : 'Unknown'),
-      Director: movie.Director || 'N/A',
-      Writer: movie.Writer || 'N/A',
-      Actors: movie.Actors || 'N/A',
-      Plot: movie.Plot || movie.overview || '',
-      Language: movie.Language || movie.original_language?.toUpperCase() || 'N/A',
-      Country: movie.Country || 'N/A',
-      Awards: movie.Awards || 'N/A',
-      Poster: movie.Poster || (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder-poster.jpg'),
-      Ratings: movie.Ratings || [{ Source: 'TMDB', Value: `${movie.vote_average}/10` }],
-      Metascore: movie.Metascore || 'N/A',
-      imdbRating: movie.imdbRating || movie.vote_average?.toString() || 'N/A',
-      imdbVotes: movie.imdbVotes || movie.vote_count?.toString() || 'N/A',
-      Type: movie.Type || 'movie',
-      DVD: movie.DVD || 'N/A',
-      BoxOffice: movie.BoxOffice || 'N/A',
-      Production: movie.Production || 'N/A',
-      Website: movie.Website || 'N/A',
-      Response: movie.Response || 'True',
-      vote_average: movie.vote_average,
-      vote_count: movie.vote_count
-    }
-    addToFavorites(favoriteMovie)
-    if (onAddToFavorites) {
-      onAddToFavorites(movie)
-    }
+    setIsMovieFavorite(!isMovieFavorite)
   }
-  setIsMovieFavorite(!isMovieFavorite)
-}
 
-  // Handle similar movie click
+  // Handle similar movie click - convert to TMDBMovie format
   const handleSimilarMovieClick = (similarMovie: SimilarMovie) => {
-    // Convert similar movie to the format expected by onMovieClick
-    const convertedMovie = {
+    const convertedMovie: TMDBMovie = {
       id: similarMovie.id,
       title: similarMovie.title,
       overview: similarMovie.overview || '',
       poster_path: similarMovie.poster_path,
+      backdrop_path: '',
       release_date: similarMovie.release_date,
       vote_average: similarMovie.vote_average,
       vote_count: 0,
-      genre_ids: similarMovie.genre_ids || [],
-      adult: similarMovie.adult || false,
-      original_language: similarMovie.original_language || 'en',
-      // Add converted fields
-      imdbID: similarMovie.id.toString(),
-      Title: similarMovie.title,
-      Year: similarMovie.release_date ? new Date(similarMovie.release_date).getFullYear().toString() : 'N/A',
-      Genre: 'Unknown', // This would need proper genre conversion
-      Plot: similarMovie.overview || '',
-      Poster: similarMovie.poster_path ? `https://image.tmdb.org/t/p/w500${similarMovie.poster_path}` : '/placeholder-poster.jpg',
-      imdbRating: similarMovie.vote_average?.toString(),
-      Rated: similarMovie.adult ? 'R' : 'PG-13',
-      Released: similarMovie.release_date || 'N/A',
+      genre_ids: [],
+      popularity: 0,
+      original_language: 'en',
+      original_title: similarMovie.title,
+      adult: false,
+      video: false
     }
 
     if (onMovieClick) {
@@ -189,22 +198,15 @@ export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, on
 
   if (!isOpen || !movie) return null
 
-  // Helper functions to get display values
-  const getTitle = () => movie.Title || movie.title || 'Unknown Title'
-  const getYear = () => movie.Year || (movie.release_date ? new Date(movie.release_date).getFullYear().toString() : 'N/A')
-  const getRating = () => movie.imdbRating || movie.vote_average?.toFixed(1) || 'N/A'
-  const getVoteCount = () => movie.imdbVotes || movie.vote_count || 0
-  const getGenre = () => movie.Genre || (movie.genres ? movie.genres.map((g: any) => g.name).join(', ') : 'Unknown Genre')
-  const getPoster = () => movie.Poster && movie.Poster !== 'N/A' 
-    ? movie.Poster 
-    : movie.poster_path 
-      ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-      : '/placeholder-poster.jpg'
-  const getPlot = () => movie.Plot || movie.overview || 'No overview available.'
-  const getReleaseDate = () => movie.Released || movie.release_date || 'N/A'
-  const getLanguage = () => movie.Language || movie.original_language?.toUpperCase() || 'N/A'
-  const getRuntime = () => movie.Runtime || 'N/A'
-  const getRated = () => movie.Rated || (movie.adult ? 'R' : 'PG-13') || 'N/A'
+  // Helper functions
+  const getTitle = () => movie.title || movie.original_title || 'Unknown Title'
+  const getYear = () => movie.release_date ? new Date(movie.release_date).getFullYear().toString() : 'N/A'
+  const getRating = () => movie.vote_average?.toFixed(1) || 'N/A'
+  const getGenre = () => movie.genre_ids?.length ? `${movie.genre_ids.length} Genres` : 'Unknown Genre'
+  const getPoster = () => movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder-poster.jpg'
+  const getPlot = () => movie.overview || 'No overview available.'
+  const getReleaseDate = () => movie.release_date || 'N/A'
+  const getLanguage = () => movie.original_language?.toUpperCase() || 'N/A'
 
   return (
     <div 
@@ -212,7 +214,7 @@ export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, on
       onClick={handleBackdropClick}
     >
       <div className="glass border border-border/20 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col backdrop-blur-sm">
-        {/* Header - Fixed */}
+        {/* Header */}
         <div className="p-6 border-b border-border/20 flex-shrink-0 bg-surface/50">
           <div className="flex justify-between items-start gap-4">
             <div className="flex-1">
@@ -228,10 +230,6 @@ export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, on
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       <span>{getYear()}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Award className="w-4 h-4 text-primary" />
-                      <span>{getRated()}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -254,17 +252,21 @@ export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, on
           </div>
         </div>
 
-        {/* Content - Scrollable */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-6">
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* Poster and Actions */}
               <div className="xl:col-span-1 space-y-4">
                 <div className="rounded-xl overflow-hidden bg-surface-elevated border border-border/20 shadow-lg">
-                  <img
+                  <Image
                     src={getPoster()}
                     alt={getTitle()}
+                    width={500}
+                    height={750}
                     className="w-full h-auto object-cover"
+                    priority
+                    unoptimized={true}
                   />
                 </div>
                 
@@ -282,25 +284,14 @@ export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, on
                     {isMovieFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
                   </button>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={handleTMDBLink}
-                      className="glass border border-border/20 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-surface/80 transition-all duration-200 text-text-primary group"
-                    >
-                      <ExternalLink className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      TMDB
-                    </button>
-
-                    {movie.imdbID && movie.imdbID !== 'N/A' && (
-                      <button
-                        onClick={() => window.open(`https://www.imdb.com/title/${movie.imdbID}`, '_blank')}
-                        className="glass border border-border/20 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-surface/80 transition-all duration-200 text-text-primary group"
-                      >
-                        <ExternalLink className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        IMDb
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    onClick={handleTMDBLink}
+                    disabled={!movie?.id}
+                    className="w-full glass border border-border/20 py-3 rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-surface/80 transition-all duration-200 text-text-primary group disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ExternalLink className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    View on TMDB
+                  </button>
                 </div>
               </div>
 
@@ -318,7 +309,7 @@ export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, on
                 </div>
 
                 {/* Movie Details */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="glass border border-border/20 rounded-xl p-3 text-center">
                     <Calendar className="w-5 h-5 text-primary mx-auto mb-2" />
                     <h4 className="text-xs font-medium text-text-muted mb-1">Release Date</h4>
@@ -336,20 +327,7 @@ export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, on
                       {getRating()}/10
                     </p>
                   </div>
-                  <div className="glass border border-border/20 rounded-xl p-3 text-center">
-                    <Clock className="w-5 h-5 text-primary mx-auto mb-2" />
-                    <h4 className="text-xs font-medium text-text-muted mb-1">Runtime</h4>
-                    <p className="text-text-primary text-sm font-medium">{getRuntime()}</p>
-                  </div>
                 </div>
-
-                {/* Vote Count */}
-                {getVoteCount() > 0 && (
-                  <div className="flex items-center justify-center gap-2 text-text-secondary text-sm">
-                    <ThumbsUp className="w-4 h-4" />
-                    <span>{getVoteCount().toLocaleString()} votes</span>
-                  </div>
-                )}
 
                 {/* Similar Movies */}
                 <div>
@@ -357,9 +335,20 @@ export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, on
                     <Sparkles className="w-5 h-5 text-primary" />
                     Similar Movies
                     {isLoadingSimilar && (
-                      <span className="text-sm text-text-muted ml-2">Loading...</span>
+                      <span className="text-sm text-text-muted ml-2">
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin inline-block"></div>
+                      </span>
                     )}
                   </h3>
+                  
+                  {similarError && !isLoadingSimilar && similarMovies.length === 0 && (
+                    <div className="text-center py-8 glass border border-border/20 rounded-xl">
+                      <Film className="w-12 h-12 text-text-secondary mx-auto mb-3" />
+                      <p className="text-text-muted text-sm">
+                        {similarError}
+                      </p>
+                    </div>
+                  )}
                   
                   {similarMovies.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -371,10 +360,13 @@ export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, on
                         >
                           <div className="aspect-[2/3] rounded-lg overflow-hidden bg-surface-elevated mb-2 relative">
                             {similarMovie.poster_path ? (
-                              <img
+                              <Image
                                 src={`https://image.tmdb.org/t/p/w200${similarMovie.poster_path}`}
                                 alt={similarMovie.title}
+                                width={200}
+                                height={300}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                unoptimized={true}
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-text-muted bg-surface-elevated">
@@ -398,16 +390,7 @@ export function MovieDetailsPopup({ movie, isOpen, onClose, onAddToFavorites, on
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    !isLoadingSimilar && (
-                      <div className="text-center py-8 glass border border-border/20 rounded-xl">
-                        <Film className="w-12 h-12 text-text-secondary mx-auto mb-3" />
-                        <p className="text-text-muted text-sm">
-                          No similar movies found.
-                        </p>
-                      </div>
-                    )
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>

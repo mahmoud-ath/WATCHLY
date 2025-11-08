@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { MovieSearchState, MovieFilters, MovieCategory, DisplayMovie } from '../types/movies'
-import { discoverMovies, searchMovies, getEnhancedRandomMovies, getGenres, getMoviesByCategory } from '../services/movieService'
-import { convertTMDBToDisplay, filterMovies } from '../utils/movieUtils'
+import { MovieSearchState, MovieFilters, MovieCategory, TMDBMovie, TMDBSearchResult, TMDBGenre } from '../types/movies'
+import { searchMovies, getEnhancedRandomMovies, getGenres, getMoviesByCategory } from '../services/movieService'
+import { filterMovies } from '../utils/movieUtils'
 import { useDebounce } from './useDebounce'
 
 /**
@@ -22,8 +22,8 @@ export const useMovieSearch = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<MovieFilters>({ genres: [], rating: '', year: '' })
   const [currentCategory, setCurrentCategory] = useState<MovieCategory>('popular')
-  const [availableGenres, setAvailableGenres] = useState<any[]>([])
-  const [randomRecommendations, setRandomRecommendations] = useState<DisplayMovie[]>([])
+  const [availableGenres, setAvailableGenres] = useState<TMDBGenre[]>([])
+  const [randomRecommendations, setRandomRecommendations] = useState<TMDBMovie[]>([])
 
   // Debounce search query for performance
   const debouncedSearchQuery = useDebounce(searchQuery, 500)
@@ -34,8 +34,8 @@ export const useMovieSearch = () => {
       try {
         const genreData = await getGenres()
         setAvailableGenres(genreData.genres)
-      } catch (err) {
-        console.error('Failed to fetch genres:', err)
+      } catch {
+        console.error('Failed to fetch genres')
       }
     }
     fetchGenres()
@@ -46,10 +46,9 @@ export const useMovieSearch = () => {
     const fetchRandomRecommendations = async () => {
       try {
         const randomMovies = await getEnhancedRandomMovies(filters, 3)
-        const convertedMovies = randomMovies.map(convertTMDBToDisplay)
-        setRandomRecommendations(convertedMovies)
-      } catch (err) {
-        console.error('Failed to fetch random movies:', err)
+        setRandomRecommendations(randomMovies)
+      } catch {
+        console.error('Failed to fetch random movies')
         setRandomRecommendations([])
       }
     }
@@ -65,7 +64,7 @@ export const useMovieSearch = () => {
     }
     
     try {
-      let result
+      let result: TMDBSearchResult
 
       if (debouncedSearchQuery.trim() === '') {
         // Use category-based fetching when no search query
@@ -75,12 +74,11 @@ export const useMovieSearch = () => {
       }
 
       if (result.results && result.results.length > 0) {
-        const convertedMovies = result.results.map(convertTMDBToDisplay)
-        const filtered = filterMovies(convertedMovies, filters)
+        const filtered = filterMovies(result.results, filters)
         
         setState(prev => ({
           ...prev,
-          movies: append ? [...prev.movies, ...convertedMovies] : convertedMovies,
+          movies: append ? [...prev.movies, ...result.results] : result.results,
           filteredMovies: append ? [...prev.filteredMovies, ...filtered] : filtered,
           currentPage: page,
           totalPages: Math.min(result.total_pages, 20), // Limit to 20 pages for performance
@@ -113,6 +111,47 @@ export const useMovieSearch = () => {
     }
   }, [debouncedSearchQuery, filters, currentCategory])
 
+  // NEW: Dedicated shuffle function that clears filters
+  const shuffleMovies = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }))
+      
+      // Clear filters internally
+      setFilters({ genres: [], rating: '', year: '' })
+      
+      // Fetch completely random movies with no filters
+      const randomMovies = await getEnhancedRandomMovies({ genres: [], rating: '', year: '' }, 20)
+      
+      if (randomMovies && randomMovies.length > 0) {
+        setState(prev => ({
+          ...prev,
+          movies: randomMovies,
+          filteredMovies: randomMovies, // No filters applied
+          currentPage: 1,
+          totalPages: 1,
+          hasMore: false,
+          error: null
+        }))
+        
+        // Update random recommendations with first 3 movies
+        const newRandomRecs = randomMovies.slice(0, 3)
+        setRandomRecommendations(newRandomRecs)
+      }
+    } catch {
+      const errorMsg = 'Failed to load random movies'
+      setState(prev => ({
+        ...prev,
+        error: errorMsg
+      }))
+      console.error('Shuffle error')
+    } finally {
+      setState(prev => ({
+        ...prev,
+        loading: false
+      }))
+    }
+  }, [])
+
   // Load more movies
   const loadMoreMovies = useCallback(() => {
     if (state.currentPage < state.totalPages && !state.loadingMore) {
@@ -130,7 +169,7 @@ export const useMovieSearch = () => {
     setSearchQuery(query.trim())
   }, [])
 
-  // Change category - FIXED: Now fetches movies for the selected category
+  // Change category
   const changeCategory = useCallback(async (category: MovieCategory) => {
     setCurrentCategory(category)
     setSearchQuery('') // Clear search when switching categories
@@ -144,12 +183,10 @@ export const useMovieSearch = () => {
       const result = await getMoviesByCategory(category, 1)
       
       if (result.results && result.results.length > 0) {
-        const convertedMovies = result.results.map(convertTMDBToDisplay)
-        
         setState(prev => ({
           ...prev,
-          movies: convertedMovies,
-          filteredMovies: convertedMovies, // No filters applied initially
+          movies: result.results,
+          filteredMovies: result.results, // No filters applied initially
           currentPage: result.page,
           totalPages: Math.min(result.total_pages, 20),
           hasMore: result.page < Math.min(result.total_pages, 20),
@@ -165,8 +202,8 @@ export const useMovieSearch = () => {
           filteredMovies: []
         }))
       }
-    } catch (err) {
-      const errorMsg = `Failed to load ${category} movies`
+    } catch {
+      const errorMsg = 'Failed to load recommendations'
       setState(prev => ({
         ...prev,
         error: errorMsg,
@@ -181,7 +218,7 @@ export const useMovieSearch = () => {
   useEffect(() => {
     setState(prev => ({ ...prev, currentPage: 1 }))
     fetchMovies(1, false)
-  }, [debouncedSearchQuery, currentCategory, filters, fetchMovies])
+  }, [debouncedSearchQuery, currentCategory, fetchMovies])
 
   // Filter movies when filters or movies change
   useEffect(() => {
@@ -204,6 +241,7 @@ export const useMovieSearch = () => {
     changeCategory,
     loadMoreMovies,
     fetchMovies: () => fetchMovies(1, false),
+    shuffleMovies, // NEW: Add shuffle function
     
     // Derived state
     hasResults: state.filteredMovies.length > 0,

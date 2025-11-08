@@ -13,7 +13,6 @@ export interface TMDBMovie {
   original_title: string
   popularity: number
   video: boolean
-  
 }
 
 export interface TMDBSearchResult {
@@ -62,11 +61,16 @@ export interface DisplayMovie {
   Production: string
   Website: string
   Response: string
+  addedAt?: string
 }
 
+export interface FavoriteMovie extends DisplayMovie {
+  addedAt: string; // ISO timestamp
+} 
+
 export interface MovieSearchState {
-  movies: DisplayMovie[]
-  filteredMovies: DisplayMovie[]
+  movies: TMDBMovie[]
+  filteredMovies: TMDBMovie[]
   loading: boolean
   loadingMore: boolean
   error: string | null
@@ -87,4 +91,75 @@ export interface FavoriteSearchState {
   searchQuery: string
   filteredFavorites: DisplayMovie[]
   isLoading: boolean
+}
+
+export interface Movie {
+  id: number;
+  title: string;
+  poster_path?: string | null;
+  backdrop_path?: string | null;
+  overview?: string;
+  release_date?: string;
+  vote_average?: number;
+  vote_count?: number;
+  genre_ids?: number[];
+  genres?: Genre[];
+  runtime?: number;
+  status?: string;
+  tagline?: string;
+  production_companies?: ProductionCompany[];
+  imdbID?: string;
+}
+
+export interface Genre {
+  id: number;
+  name: string;
+}
+
+export interface ProductionCompany {
+  id: number;
+  name: string;
+  logo_path?: string | null;
+}
+
+export interface MovieSearchResult {
+  page: number;
+  results: Movie[];
+  total_pages: number;
+  total_results: number;
+}
+
+// Type guard functions - FIXED: No more 'any' types
+export function isDisplayMovie(movie: DisplayMovie | TMDBMovie): movie is DisplayMovie {
+  return 'imdbID' in movie && 'Title' in movie;
+}
+
+export function isTMDBMovie(movie: DisplayMovie | TMDBMovie): movie is TMDBMovie {
+  return 'id' in movie && 'title' in movie && typeof movie.id === 'number';
+}
+
+// Helper functions for safe property access
+export function getMovieTitle(movie: DisplayMovie | TMDBMovie): string {
+  if (isDisplayMovie(movie)) return movie.Title;
+  return movie.title;
+}
+
+export function getMoviePoster(movie: DisplayMovie | TMDBMovie): string {
+  if (isDisplayMovie(movie)) return movie.Poster;
+  return movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder-poster.jpg';
+}
+
+export function getMovieId(movie: DisplayMovie | TMDBMovie): string {
+  if (isDisplayMovie(movie)) return movie.imdbID;
+  return movie.id.toString();
+}
+
+export function getMovieYear(movie: DisplayMovie | TMDBMovie): string {
+  if (isDisplayMovie(movie)) return movie.Year;
+  return movie.release_date ? new Date(movie.release_date).getFullYear().toString() : 'N/A';
+}
+
+export function getMovieRating(movie: DisplayMovie | TMDBMovie): string {
+  if (isDisplayMovie(movie)) return movie.imdbRating;
+  return movie.vote_average?.toFixed(1) || 'N/A';
 }

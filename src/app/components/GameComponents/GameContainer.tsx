@@ -8,13 +8,10 @@ import { ResultsScreen } from './ResultsScreen'
 import {
   Trophy,
   Clock,
-  Star,
   Sparkles,
   Film,
   Award,
-  Play,
   Home,
-  RotateCcw
 } from 'lucide-react'
 
 const questions: Question[] = [
@@ -119,7 +116,7 @@ export const GameContainer = () => {
 
   const handleExploreMovies = () => {
     // Navigate to main movie page
-    window.location.href = '/mainmovie';
+    window.location.href = '/home';
   };
 
   // Timer effect
@@ -162,7 +159,6 @@ export const GameContainer = () => {
 
   // Calculate additional stats for results screen
   const gameDuration = Math.floor(gameStats.totalTime / 1000);
-  const accuracy = Math.round((score / questions.length) * 100);
   const averageTime = Math.floor(gameDuration / questions.length);
 
   return (
@@ -252,12 +248,11 @@ export const GameContainer = () => {
             streak={gameStats.correctStreak}
           />
         )}
-        
+        zzz
         {showResults && (
           <ResultsScreen
             score={score}
             totalQuestions={questions.length}
-            accuracy={accuracy}
             gameDuration={gameDuration}
             averageTime={averageTime}
             maxStreak={gameStats.maxStreak}

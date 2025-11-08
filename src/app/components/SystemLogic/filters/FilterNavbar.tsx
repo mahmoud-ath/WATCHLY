@@ -1,16 +1,11 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { GenreFilter } from './GenreFilter'
-import { RatingFilter } from './RatingFilter'
-import { 
-  Filter, 
-  X, 
-  Calendar, 
-  Star, 
-  ArrowUpDown, 
+import {
+  X,
   Check,
   Theater,
-  ChevronDown
+  Star
 } from 'lucide-react'
 
 interface Filters {
@@ -27,9 +22,6 @@ interface FilterNavbarProps {
 
 export const FilterNavbar = ({ onFiltersChange, initialFilters }: FilterNavbarProps) => {
   const genres = ['Action', 'Adventure', 'Drama', 'Sci-Fi', 'Family', 'Romance', 'Comedy', 'Thriller', 'Horror', 'Animation']
-  const years = ['2025', '2024', '2023', '2022', '2021', '2020', '2019', '2018']
-  const ratings = ['9.0+ Excellent', '8.0+ Great', '7.0+ Good', '6.0+ Average', '5.0+ Fair']
-  const sortOptions = ['Popularity', 'Newest', 'Oldest', 'A-Z', 'Z-A']
 
   // Initialize state with initialFilters or empty values
   const [selectedGenres, setSelectedGenres] = useState<string[]>(initialFilters?.genres || [])
@@ -92,16 +84,8 @@ export const FilterNavbar = ({ onFiltersChange, initialFilters }: FilterNavbarPr
     updateLocalFilters(genres, selectedYear, selectedRating, selectedSort)
   }
 
-  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    updateLocalFilters(selectedGenres, e.target.value, selectedRating, selectedSort)
-  }
-
   const handleRatingChange = (rating: string) => {
     updateLocalFilters(selectedGenres, selectedYear, rating, selectedSort)
-  }
-
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    updateLocalFilters(selectedGenres, selectedYear, selectedRating, e.target.value)
   }
 
   const clearFilters = () => {
@@ -143,22 +127,6 @@ export const FilterNavbar = ({ onFiltersChange, initialFilters }: FilterNavbarPr
 
           {/* Middle: Other Filters */}
           <div className="flex items-center gap-4">
-            {/* Year Filter */}
-            {/* <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-text-secondary" />
-              <div className="relative">
-                <select
-                  value={selectedYear}
-                  onChange={handleYearChange}
-                  className="text-sm border-0 bg-transparent focus:ring-0 text-text-primary pr-6 appearance-none cursor-pointer hover:text-text-primary transition-colors"
-                >
-                  <option value="">All Years</option>
-                  {years.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-                <ChevronDown className="w-3 h-3 text-text-secondary absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none" />
-              </div>
-            </div> */}
-
             {/* Rating Filter */}
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-yellow-400" />
@@ -168,29 +136,14 @@ export const FilterNavbar = ({ onFiltersChange, initialFilters }: FilterNavbarPr
                   onChange={(e) => handleRatingChange(e.target.value)}
 className="text-sm border-0 bg-transparent focus:ring-2 focus:ring-primary/30 text-text-primary pr-8 appearance-none cursor-pointer hover:text-primary transition-all duration-200 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
                       <option value="">Any Rating</option>
-                  {ratings.map(r => (
-                    <option key={r} value={r}>{r.split(' ')[0]}</option>
-                  ))}
+                  <option value="9.0+ Excellent">9.0+</option>
+                  <option value="8.0+ Great">8.0+</option>
+                  <option value="7.0+ Good">7.0+</option>
+                  <option value="6.0+ Average">6.0+</option>
+                  <option value="5.0+ Fair">5.0+</option>
                 </select>
-                <ChevronDown className="w-3 h-3 text-text-secondary absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
-
-            {/* Sort Filter */}
-            {/* <div className="flex items-center gap-2">
-              <ArrowUpDown className="w-4 h-4 text-text-secondary" />
-              <div className="relative">
-                <select
-                  value={selectedSort}
-                  onChange={handleSortChange}
-                  className="text-sm border-0 bg-transparent focus:ring-0 text-text-primary pr-6 appearance-none cursor-pointer hover:text-text-primary transition-colors"
-                >
-                  <option value="">Popularity</option>
-                  {sortOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <ChevronDown className="w-3 h-3 text-text-secondary absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none" />
-              </div>
-            </div> */}
           </div>
 
           {/* Right: Action Buttons */}
@@ -216,6 +169,7 @@ className="text-sm border-0 bg-transparent focus:ring-2 focus:ring-primary/30 te
               <Check className="w-4 h-4" />
               {isDirty ? 'Apply' : 'Applied'}
             </button>
+            
           </div>
         </div>
 

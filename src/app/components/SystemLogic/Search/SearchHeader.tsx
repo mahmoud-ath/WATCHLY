@@ -5,7 +5,11 @@ interface SearchHeaderProps {
   title: string
   resultsCount: string
   error: string | null
-  activeFilters: any
+  activeFilters: {
+    genres?: string[]
+    rating?: string
+    year?: string
+  }
   searchQuery?: string
   onClearFilters: () => void
 }
@@ -43,8 +47,17 @@ export const SearchHeader = ({
   )
 }
 
-const ActiveFiltersBadges = ({ filters, onClearFilters }: { filters: any, onClearFilters: () => void }) => {
-  const hasActiveFilters = filters.genres?.length > 0 || filters.rating || filters.year
+interface ActiveFiltersBadgesProps {
+  filters: {
+    genres?: string[]
+    rating?: string
+    year?: string
+  }
+  onClearFilters: () => void
+}
+
+const ActiveFiltersBadges = ({ filters, onClearFilters }: ActiveFiltersBadgesProps) => {
+  const hasActiveFilters = filters.genres?.length || filters.rating || filters.year
 
   if (!hasActiveFilters) return null
 

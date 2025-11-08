@@ -1,25 +1,26 @@
 // components/Movie/MovieGrid.tsx
 'use client'
 import { MovieCard } from './MovieCard'
-import { 
-  Loader2, 
-  Film, 
-  FilterX, 
-  Sparkles, 
+import type { TMDBMovie } from '../../types/movies'
+import {
+  Loader2,
+  Film,
+  FilterX,
+  Sparkles,
   Infinity,
   ChevronDown,
   RefreshCw
 } from 'lucide-react'
 
 interface MovieGridProps {
-  movies: any[]
+  movies: TMDBMovie[]
   onClearFilters: () => void
   isLoadingMore?: boolean
   hasMoreMovies?: boolean
   onLoadMore?: () => void
-  onMovieClick: (movie: any) => void
-  onAddToFavorites?: (movie: any) => void
-  onRemoveFromFavorites?: (movie: any) => void
+  onMovieClick: (movie: TMDBMovie) => void
+  onAddToFavorites?: (movie: TMDBMovie) => void
+  onRemoveFromFavorites?: (movie: TMDBMovie) => void
 }
 
 export const MovieGrid = ({ 
@@ -39,7 +40,7 @@ export const MovieGrid = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {movies.map((movie) => (
             <MovieCard
-              key={movie.imdbID || movie.id}
+              key={movie.id}
               movie={movie}
               onClick={onMovieClick}
               onAddToFavorites={onAddToFavorites}
@@ -79,7 +80,7 @@ export const MovieGrid = ({
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-text-primary mb-2">
-                You've reached the end!
+                You&apos;ve reached the end!
               </h3>
               <p className="text-text-secondary mb-4">
                 Discovered {movies.length} amazing movies
@@ -105,7 +106,7 @@ export const MovieGrid = ({
           No movies found
         </h3>
         <p className="text-text-secondary text-lg mb-6 leading-relaxed">
-          We couldn't find any movies matching your current filters. 
+          We couldn&apos;t find any movies matching your current filters.
           Try adjusting your search criteria or explore different genres.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

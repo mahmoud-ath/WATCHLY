@@ -132,7 +132,7 @@ export const GameScreen = ({
       {/* Answer Options */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {question.options.map((option, index) => {
-          let baseClasses = "glass border border-border/20 rounded-xl p-6 text-left transition-all duration-300 cursor-pointer group";
+          const baseClasses = "glass border border-border/20 rounded-xl p-6 text-left transition-all duration-300 cursor-pointer group";
           let stateClasses = "";
           let icon = null;
 

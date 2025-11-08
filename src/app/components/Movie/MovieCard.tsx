@@ -2,108 +2,52 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useFavorites } from '../../hooks/useFavorites'
+import Image from 'next/image'
 import {
   Heart,
   Share2,
   Play,
   Star,
   Calendar,
-  Clock,
   Award,
   Twitter,
   Facebook,
   Link,
   Eye
 } from 'lucide-react'
+import { TMDBMovie, DisplayMovie } from '../../types/movies'
 
-// Combined Movie Interface that works with both TMDBMovie and DisplayMovie
-export interface Movie {
-  // TMDBMovie properties
-  id?: number
-  title?: string
-  overview?: string
-  poster_path?: string | null
-  backdrop_path?: string | null
-  release_date?: string
-  vote_average?: number
-  vote_count?: number
-  genre_ids?: number[]
-  adult?: boolean
-  original_language?: string
-  original_title?: string
-  popularity?: number
-  video?: boolean
-  
-  // DisplayMovie properties
-  imdbID?: string
-  Title?: string
-  Year?: string
-  Rated?: string
-  Released?: string
-  Runtime?: string
-  Genre?: string
-  Director?: string
-  Writer?: string
-  Actors?: string
-  Plot?: string
-  Language?: string
-  Country?: string
-  Awards?: string
-  Poster?: string
-  Ratings?: Array<{ Source: string; Value: string }>
-  Metascore?: string
-  imdbRating?: string
-  imdbVotes?: string
-  Type?: string
-  DVD?: string
-  BoxOffice?: string
-  Production?: string
-  Website?: string
-  Response?: string
-}
-
-export interface MovieCardProps {
-  movie: Movie
-  onAddToFavorites?: (movie: Movie) => void
-  onRemoveFromFavorites?: (movie: Movie) => void
+interface MovieCardProps {
+  movie: TMDBMovie
+  onClick?: (movie: TMDBMovie) => void
+  onAddToFavorites?: (movie: TMDBMovie) => void
+  onRemoveFromFavorites?: (movie: TMDBMovie) => void
   isFavorite?: boolean
-  onClick?: (movie: Movie) => void
 }
 
 export const MovieCard = ({ 
   movie, 
   onAddToFavorites, 
   onRemoveFromFavorites, 
-  isFavorite = false, 
   onClick 
 }: MovieCardProps) => {
-  const { addToFavorites, removeFromFavorites, isFavorite: isMovieFavorite } = useFavorites()
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites()
   const [favorite, setFavorite] = useState(false)
   const [showShareOptions, setShowShareOptions] = useState(false)
 
-  // Use TMDB data directly
-  const rating = movie.vote_average || parseFloat(movie.imdbRating || '0') || 0
-  const year = movie.Year || (movie.release_date ? new Date(movie.release_date).getFullYear().toString() : 'N/A')
-
-  // Get the display title (fallback to original_title if needed)
-  const displayTitle = movie.Title || movie.title || movie.original_title || 'Unknown Title'
-  
-  // Get the display genre (use converted Genre or fallback)
-  const displayGenre = movie.Genre || 'Unknown Genre'
-  
-  // Get poster URL - use converted Poster or build from poster_path
-  const posterUrl = movie.Poster || (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null)
-
-  // Get rating display - use converted imdbRating or vote_average
-  const ratingDisplay = movie.imdbRating || (movie.vote_average?.toFixed(1) || 'N/A')
+  // TMDB data
+  const rating = movie.vote_average || 0
+  const year = movie.release_date ? new Date(movie.release_date).getFullYear().toString() : 'N/A'
+  const displayTitle = movie.title || movie.original_title || 'Unknown Title'
+  const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null
+  const ratingDisplay = movie.vote_average?.toFixed(1) || 'N/A'
 
   // Check if movie is favorite when component mounts
   useEffect(() => {
-    const movieId = movie.imdbID || movie.id?.toString()
-    if (movieId) {
-      setFavorite(isMovieFavorite(movieId))
+    if (movie.id) {
+      setFavorite(isFavorite(movie.id.toString()))
     }
-  }, [movie, isMovieFavorite])
+  }, [movie, isFavorite])
 
   // Handle card click
   const handleCardClick = () => {
@@ -114,44 +58,41 @@ export const MovieCard = ({
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const movieId = movie.imdbID || movie.id?.toString()
-    if (!movieId) return
+    if (!movie.id) return
     
     if (favorite) {
-      removeFromFavorites(movieId)
+      removeFromFavorites(movie.id.toString())
       if (onRemoveFromFavorites) {
         onRemoveFromFavorites(movie)
       }
     } else {
-      const favoriteMovie = {
-        id: movie.id,
-        imdbID: movieId,
+      // Convert TMDBMovie to DisplayMovie format for storage
+      const favoriteMovie: DisplayMovie = {
+        imdbID: movie.id.toString(),
         Title: displayTitle,
         Year: year,
-        Rated: movie.Rated || 'N/A',
-        Released: movie.Released || movie.release_date || 'N/A',
-        Runtime: movie.Runtime || 'N/A',
-        Genre: displayGenre,
-        Director: movie.Director || 'N/A',
-        Writer: movie.Writer || 'N/A',
-        Actors: movie.Actors || 'N/A',
-        Plot: movie.Plot || movie.overview || '',
-        Language: movie.Language || movie.original_language?.toUpperCase() || 'N/A',
-        Country: movie.Country || 'N/A',
-        Awards: movie.Awards || 'N/A',
+        Rated: 'N/A',
+        Released: movie.release_date || 'N/A',
+        Runtime: 'N/A',
+        Genre: 'N/A',
+        Director: 'N/A',
+        Writer: 'N/A',
+        Actors: 'N/A',
+        Plot: movie.overview || '',
+        Language: movie.original_language?.toUpperCase() || 'N/A',
+        Country: 'N/A',
+        Awards: 'N/A',
         Poster: posterUrl || '/placeholder-poster.jpg',
-        Ratings: movie.Ratings || [{ Source: 'TMDB', Value: `${movie.vote_average}/10` }],
-        Metascore: movie.Metascore || 'N/A',
+        Ratings: [{ Source: 'TMDB', Value: `${movie.vote_average}/10` }],
+        Metascore: 'N/A',
         imdbRating: ratingDisplay,
-        imdbVotes: movie.imdbVotes || movie.vote_count?.toString() || 'N/A',
-        Type: movie.Type || 'movie',
-        DVD: movie.DVD || 'N/A',
-        BoxOffice: movie.BoxOffice || 'N/A',
-        Production: movie.Production || 'N/A',
-        Website: movie.Website || 'N/A',
-        Response: movie.Response || 'True',
-        vote_average: movie.vote_average,
-        vote_count: movie.vote_count
+        imdbVotes: movie.vote_count?.toString() || '0',
+        Type: 'movie',
+        DVD: 'N/A',
+        BoxOffice: 'N/A',
+        Production: 'N/A',
+        Website: 'N/A',
+        Response: 'True'
       }
       addToFavorites(favoriteMovie)
       if (onAddToFavorites) {
@@ -192,14 +133,18 @@ export const MovieCard = ({
       {/* Poster Section */}
       <div className="h-56 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center relative overflow-hidden">
         {posterUrl && posterUrl !== 'N/A' ? (
-          <img 
-            src={posterUrl} 
-            alt={displayTitle}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none'
-            }}
-          />
+          <Image 
+  src={posterUrl} 
+  alt={displayTitle}
+  width={256}
+  height={224}
+  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+  unoptimized={true} // Add this
+  onError={(e) => {
+    const target = e.target as HTMLImageElement;
+    target.style.display = 'none';
+  }}
+/>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
             <div className="w-16 h-16 bg-surface/30 rounded-full flex items-center justify-center backdrop-blur-sm border border-border/20">
@@ -291,7 +236,7 @@ export const MovieCard = ({
         
         <p className="text-text-secondary text-xs mb-3 truncate flex items-center gap-1">
           <Award className="w-3 h-3 text-primary" />
-          {displayGenre}
+          {movie.genre_ids && movie.genre_ids.length > 0 ? 'Multi-Genre' : 'N/A'}
         </p>
         
         {/* Additional Info */}
@@ -300,27 +245,13 @@ export const MovieCard = ({
             <Calendar className="w-3 h-3" />
             <span>{year}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            <span>{movie.Runtime || 'N/A'}</span>
-          </div>
         </div>
         
         {/* Rating and Votes */}
         <div className="flex items-center justify-between text-xs">
-          {movie.Rated && movie.Rated !== 'N/A' && (
-            <span className="bg-primary/20 text-primary px-2 py-1 rounded-full font-medium">
-              {movie.Rated}
-            </span>
-          )}
-          
           {movie.vote_count && movie.vote_count > 0 ? (
             <span className="text-text-secondary">
               {movie.vote_count.toLocaleString()} votes
-            </span>
-          ) : movie.imdbVotes && movie.imdbVotes !== 'N/A' ? (
-            <span className="text-text-secondary">
-              {movie.imdbVotes} votes
             </span>
           ) : null}
         </div>

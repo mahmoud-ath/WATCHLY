@@ -1,4 +1,4 @@
-import { TMDBMovie, TMDBSearchResult, TMDBGenre, MovieFilters, MovieCategory } from '../types/movies'
+import { TMDBSearchResult, TMDBGenre, MovieFilters, MovieCategory, TMDBMovie } from '../types/movies'
 
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
@@ -45,7 +45,7 @@ export const discoverMovies = async (filters?: MovieFilters, page: number = 1, s
   
   if (filters?.genres && filters.genres.length > 0) {
     const genreIds = filters.genres.map(genre => {
-      const found = Object.entries(GENRE_MAPPING).find(([_, name]) => 
+      const found = Object.entries(GENRE_MAPPING).find(([ name]) => 
         name.toLowerCase() === genre.toLowerCase()
       )
       return found ? found[0] : null
@@ -70,7 +70,7 @@ export const discoverMovies = async (filters?: MovieFilters, page: number = 1, s
 /**
  * Gets enhanced random movies with fallback mechanism
  */
-export const getEnhancedRandomMovies = async (filters?: MovieFilters, count: number = 3): Promise<any[]> => {
+export const getEnhancedRandomMovies = async (filters?: MovieFilters, count: number = 3): Promise<TMDBMovie[]> => {
   try {
     // Try discover with current filters first
     const randomPage = Math.floor(Math.random() * 50) + 1
@@ -111,5 +111,16 @@ export const getGenres = async (): Promise<{ genres: TMDBGenre[] }> => {
     `${TMDB_BASE_URL}/genre/movie/list?api_key=${TMDB_API_KEY}`
   )
   if (!response.ok) throw new Error('Failed to fetch genres')
+  return response.json()
+}
+
+/**
+ * Gets movie details from TMDB
+ */
+export const getMovieDetails = async (movieId: string): Promise<TMDBMovie> => {
+  const response = await fetch(
+    `${TMDB_BASE_URL}/movie/${movieId}?api_key=${TMDB_API_KEY}`
+  )
+  if (!response.ok) throw new Error('Failed to fetch movie details')
   return response.json()
 }

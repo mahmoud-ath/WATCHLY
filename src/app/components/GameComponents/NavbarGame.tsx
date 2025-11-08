@@ -7,16 +7,12 @@ import {
   Share2,
   Gift,
   Film,
-  User,
-  Crown,
   X,
   Copy,
   Twitter,
   Facebook,
   MessageCircle,
-  Send,
-  LogIn,
-  Sparkles
+  Send
 } from 'lucide-react'
 
 export const Navbar = () => {
@@ -49,7 +45,7 @@ export const Navbar = () => {
   const shareOnSocialMedia = (platform: string) => {
     const appUrl = window.location.href
     const shareText = 'Check out Watchly - Your ultimate movie companion! Discover, save, and share your favorite movies.'
-    
+
     const shareUrls = {
       twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(appUrl)}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(appUrl)}`,
@@ -61,8 +57,6 @@ export const Navbar = () => {
       window.open(shareUrls[platform as keyof typeof shareUrls], '_blank', 'width=600,height=400')
     }
   }
-
-  const isLoggedIn = false // Replace with actual authentication logic
 
   return (
     <>

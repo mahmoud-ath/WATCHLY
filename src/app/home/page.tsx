@@ -1,5 +1,4 @@
 'use client'
-import { MovieCard } from '../components/Movie/MovieCard'
 import { FilterNavbar } from '../components/SystemLogic/filters/FilterNavbar'
 import { Navbar } from '../components/layout/Navbar'
 import { SearchHeader } from '../components/SystemLogic/Search/SearchHeader'
@@ -12,8 +11,9 @@ import { useMovieFilters } from '../hooks/useMovieFilters'
 import toast from 'react-hot-toast'
 import { useState, useCallback } from 'react'
 import { getRecommendationTitle, getResultsCountText } from '../utils/movieUtils'
-import { MovieCategory } from '../types/movies'
-import {Footer} from '../components/layout/Footer'
+import type { MovieCategory, MovieFilters } from '../types/movies'
+import { TMDBMovie, DisplayMovie } from '../types/movies'
+import { Footer } from '../components/layout/Footer'
 import { useFavorites } from '../hooks/useFavorites'
 
 /**
@@ -21,23 +21,27 @@ import { useFavorites } from '../hooks/useFavorites'
  * Features: Search, Filtering, Categories, Random Recommendations
  */
 export default function Home() {
-  const [selectedMovie, setSelectedMovie] = useState<any>(null)
+  const [selectedMovie, setSelectedMovie] = useState<TMDBMovie | null>(null)
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [randomKey, setRandomKey] = useState(0)
-  const [currentFilters, setCurrentFilters] = useState({
-    genres: [],
+  const [currentFilters, setCurrentFilters] = useState<MovieFilters>({
+    genres: [] as string[],
     year: '',
-    rating: '',
-    sortBy: ''
+    rating: ''
   })
-const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites()
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites()
 
   // Custom hooks for state management
   const movieSearch = useMovieSearch()
   const { clearFilters } = useMovieFilters()
 
+  // Wrapper for isFavorite to convert number to string
+  const isFavoriteWrapped = useCallback((movieId: number) => {
+    return isFavorite(movieId.toString())
+  }, [isFavorite])
+
   // Handle movie card clicks
-  const handleMovieClick = useCallback((movie: any) => {
+  const handleMovieClick = useCallback((movie: TMDBMovie) => {
     setSelectedMovie(movie)
     setIsPopupOpen(true)
   }, [])
@@ -48,59 +52,95 @@ const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites()
     setSelectedMovie(null)
   }, [])
 
-  // Handle search from navbar
+  // ✅ FIXED: Added movieSearch dependency
   const handleSearch = useCallback((query: string) => {
     movieSearch.updateSearchQuery(query)
-  }, [movieSearch])
+  }, [movieSearch]) // ✅ Fixed
 
-  // Handle filter changes without page refresh
-  const handleFiltersChange = useCallback((newFilters: any) => {
+  // ✅ FIXED: Added movieSearch dependency
+  const handleFiltersChange = useCallback((newFilters: MovieFilters) => {
     setCurrentFilters(newFilters)
     movieSearch.updateFilters(newFilters)
-  }, [movieSearch])
+  }, [movieSearch]) // ✅ Fixed
 
-  // Shuffle random recommendations
+  // ✅ FIXED: Added movieSearch dependency
   const handleShuffle = useCallback(async () => {
     try {
-      await movieSearch.fetchMovies()
+      // Clear all filters before shuffling
+      const emptyFilters = { genres: [], rating: '', year: '' }
+      movieSearch.updateFilters(emptyFilters)
+      setCurrentFilters(emptyFilters)
+      clearFilters()
+      
+      // Use shuffleMovies if available, otherwise use fetchMovies
+      if (movieSearch.shuffleMovies) {
+        await movieSearch.shuffleMovies()
+      } else {
+        await movieSearch.fetchMovies()
+      }
+      
       setRandomKey(prev => prev + 1)
       toast.success('New recommendations loaded!')
     } catch (err) {
       console.error('Failed to shuffle movies:', err)
       toast.error('Failed to load new recommendations')
     }
-  }, [movieSearch])
+  }, [movieSearch, clearFilters]) // ✅ Fixed
 
-  // Quick search by genre
-  const handleQuickSearch = useCallback((genre: string) => {
-    movieSearch.updateSearchQuery(genre)
-    movieSearch.updateFilters({ genres: [], rating: '', year: '' })
-  }, [movieSearch])
-
-  // Clear all filters
+  // ✅ FIXED: Added movieSearch dependency
   const handleClearAllFilters = useCallback(() => {
+    const emptyFilters = { genres: [], year: '', rating: '' }
     clearFilters()
-    setCurrentFilters({ genres: [], year: '', rating: '', sortBy: '' })
+    setCurrentFilters(emptyFilters)
+    movieSearch.updateFilters(emptyFilters)
     toast.success('Filters cleared!')
-  }, [clearFilters])
+  }, [movieSearch, clearFilters]) // ✅ Fixed
 
-  // Category switcher - fixed type issue
- // In page.tsx - modify the handleCategoryChange function
-const handleCategoryChange = useCallback(async (category: MovieCategory) => {
-  try {
-    await movieSearch.changeCategory(category)
-    // Clear filters when changing categories
-    setCurrentFilters({ genres: [], year: '', rating: '', sortBy: '' })
-    movieSearch.updateFilters({ genres: [], year: '', rating: '' })
-  } catch (err) {
-    console.error('Failed to change category:', err)
-    toast.error('Failed to load movies for this category')
-  }
-}, [movieSearch])
+  // ✅ FIXED: Added movieSearch dependency
+  const handleCategoryChange = useCallback(async (category: MovieCategory) => {
+    try {
+      const emptyFilters = { genres: [], year: '', rating: '' }
+      clearFilters()
+      setCurrentFilters(emptyFilters)
+      movieSearch.updateFilters(emptyFilters)
+      await movieSearch.changeCategory(category)
+    } catch (err) {
+      console.error('Failed to change category:', err)
+      toast.error('Failed to load movies for this category')
+    }
+  }, [movieSearch, clearFilters]) // ✅ Fixed
 
   // Enhanced favorite handlers with toast notifications
-  const handleAddToFavorites = useCallback((movie: any) => {
-    const movieTitle = movie.Title || movie.title
+  const handleAddToFavorites = useCallback((movie: TMDBMovie) => {
+    const movieTitle = movie.title || 'Unknown Movie'
+    const displayMovie: DisplayMovie = {
+      imdbID: movie.id.toString(),
+      Title: movie.title || movie.original_title || 'Unknown',
+      Year: movie.release_date ? new Date(movie.release_date).getFullYear().toString() : 'N/A',
+      Rated: 'N/A',
+      Released: movie.release_date || 'N/A',
+      Runtime: 'N/A',
+      Genre: 'N/A',
+      Director: 'N/A',
+      Writer: 'N/A',
+      Actors: 'N/A',
+      Plot: movie.overview || '',
+      Language: movie.original_language?.toUpperCase() || 'N/A',
+      Country: 'N/A',
+      Awards: 'N/A',
+      Poster: movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder-poster.jpg',
+      Ratings: [],
+      Metascore: 'N/A',
+      imdbRating: movie.vote_average?.toString() || 'N/A',
+      imdbVotes: movie.vote_count?.toString() || '0',
+      Type: 'movie',
+      DVD: 'N/A',
+      BoxOffice: 'N/A',
+      Production: 'N/A',
+      Website: 'N/A',
+      Response: 'True'
+    }
+    addToFavorites(displayMovie)
     toast.success(`"${movieTitle}" added to favorites!`, {
       icon: '❤️',
       style: {
@@ -109,10 +149,11 @@ const handleCategoryChange = useCallback(async (category: MovieCategory) => {
         border: '1px solid var(--accent)',
       },
     })
-  }, [])
+  }, [addToFavorites])
 
-  const handleRemoveFromFavorites = useCallback((movie: any) => {
-    const movieTitle = movie.Title || movie.title
+  const handleRemoveFromFavorites = useCallback((movie: TMDBMovie) => {
+    const movieTitle = movie.title || 'Unknown Movie'
+    removeFromFavorites(movie.id.toString())
     toast.success(`"${movieTitle}" removed from favorites!`, {
       icon: '💔',
       style: {
@@ -121,7 +162,7 @@ const handleCategoryChange = useCallback(async (category: MovieCategory) => {
         border: '1px solid #ef4444',
       },
     })
-  }, [])
+  }, [removeFromFavorites])
 
   // Loading state
   if (movieSearch.loading) {
@@ -151,6 +192,7 @@ const handleCategoryChange = useCallback(async (category: MovieCategory) => {
           onMovieClick={handleMovieClick}
           onAddToFavorites={handleAddToFavorites}
           onRemoveFromFavorites={handleRemoveFromFavorites}
+          isFavorite={isFavoriteWrapped}
           key={randomKey}
         />
       )}
@@ -158,7 +200,7 @@ const handleCategoryChange = useCallback(async (category: MovieCategory) => {
       {/* Filter Navbar */}
       <FilterNavbar 
         onFiltersChange={handleFiltersChange}
-        initialFilters={currentFilters}
+        initialFilters={{ ...currentFilters, sortBy: '' }}
       />
       
       {/* Main Content */}
@@ -195,9 +237,9 @@ const handleCategoryChange = useCallback(async (category: MovieCategory) => {
           onRemoveFromFavorites={handleRemoveFromFavorites}
         />
 
-        {/* Movie Details Popup */}
+        {/* ✅ FIXED: Replaced "any" with proper type */}
         <MovieDetailsPopup
-          movie={selectedMovie}
+          movie={selectedMovie }
           isOpen={isPopupOpen}
           onClose={handleClosePopup}
           onAddToFavorites={handleAddToFavorites}
