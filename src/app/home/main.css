@@ -471,6 +471,7 @@ body {
 .border-primary { border-color: color-mix(in srgb, var(--primary) 30%, transparent); }
 
 /* ===== RESPONSIVE DESIGN ===== */
+/* Desktop: 1200px and above */
 @media (max-width: 1200px) {
   .movies-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -482,6 +483,7 @@ body {
   }
 }
 
+/* Tablet: 1024px - 1199px */
 @media (max-width: 1024px) {
   .filter-navbar {
     flex-direction: column;
@@ -510,55 +512,410 @@ body {
   }
 }
 
+/* Tablet: 768px - 1023px */
 @media (max-width: 768px) {
+  body {
+    font-size: 15px;
+  }
+
+  .glass-navbar {
+    margin: 12px 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+  }
+
+  .filter-navbar {
+    margin: 12px 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .filter-section {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .filter-label {
+    font-size: 0.8rem;
+    min-width: 100%;
+  }
+  
   .movies-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
     padding: 0 16px;
   }
   
   .random-movies-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
+    padding: 0 16px;
   }
-  
-  .glass-navbar,
-  .filter-navbar {
-    margin: 12px 16px;
-    padding: 16px;
+
+  .movie-card {
     border-radius: 12px;
+  }
+
+  .movie-card:hover {
+    transform: translateY(-4px) scale(1.01);
   }
   
   .filter-control {
-    font-size: 0.8125rem;
-    padding: 8px 12px;
+    font-size: 0.8rem;
+    padding: 10px 12px;
+    min-height: 40px;
   }
   
   .genre-button {
     padding: 6px 12px;
     font-size: 0.75rem;
   }
+
+  .filter-action-btn {
+    font-size: 0.8rem;
+    padding: 10px 16px;
+    min-height: 40px;
+  }
+
+  .search-input {
+    font-size: 0.9rem;
+    padding: 10px 12px 10px 40px;
+  }
 }
 
-@media (max-width: 480px) {
-  .movies-grid {
+/* Small Tablet / Large Phone: 480px - 767px */
+@media (max-width: 767px) {
+  body {
+    font-size: 14px;
+  }
+
+  .glass-navbar {
+    margin: 10px 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
     gap: 12px;
+  }
+
+  .filter-navbar {
+    margin: 10px 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .filter-section {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-label {
+    font-size: 0.75rem;
+    width: 100%;
+  }
+
+  .movies-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
     padding: 0 12px;
   }
   
   .random-movies-grid {
-    gap: 12px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 0 12px;
   }
-  
-  .glass-navbar,
-  .filter-navbar {
-    margin: 8px 12px;
-    padding: 12px;
+
+  .movie-card {
+    border-radius: 10px;
   }
-  
+
+  .movie-card:hover {
+    transform: translateY(-3px) scale(1.01);
+  }
+
+  .filter-control {
+    font-size: 0.75rem;
+    padding: 8px 10px;
+    min-height: 36px;
+    width: 100%;
+  }
+
+  .genre-button {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+    border-radius: 8px;
+  }
+
   .filter-action-btn {
-    padding: 8px 16px;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
+    padding: 8px 12px;
+    min-height: 36px;
+  }
+
+  .clear-btn,
+  .apply-btn {
+    flex: 1;
+  }
+
+  .search-input {
+    font-size: 0.85rem;
+    padding: 8px 10px 8px 36px;
+  }
+
+  /* ===== MOBILE-SPECIFIC OPTIMIZATIONS ===== */
+
+  /* Touch-friendly spacing for mobile */
+  @media (max-width: 640px) {
+    /* Increase touch target size */
+    button, a, input, select {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Remove hover effects on touch devices */
+    @media (hover: none) and (pointer: coarse) {
+      .movie-card:hover {
+        transform: none;
+      }
+
+      .genre-button:hover {
+        background: color-mix(in srgb, var(--surface-elevated) 80%, transparent);
+        transform: none;
+      }
+
+      .filter-control:hover {
+        transform: none;
+      }
+    }
+  }
+
+  /* Hidden elements on small screens */
+  @media (max-width: 768px) {
+    .hidden-mobile {
+      display: none !important;
+    }
+
+    .show-mobile {
+      display: block !important;
+    }
+  }
+
+  @media (min-width: 769px) {
+    .hidden-desktop {
+      display: none !important;
+    }
+
+    .show-desktop {
+      display: block !important;
+    }
+  }
+
+  /* Mobile menu/drawer optimization */
+  @media (max-width: 640px) {
+    .mobile-drawer {
+      position: fixed;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100vh;
+      transition: left 0.3s ease;
+      z-index: 50;
+    }
+
+    .mobile-drawer.open {
+      left: 0;
+    }
+
+    /* Prevent body scroll when drawer is open */
+    body.drawer-open {
+      overflow: hidden;
+    }
+  }
+
+  /* Safe area for notched devices */
+  @supports (padding: max(0px)) {
+    .glass-navbar,
+    .filter-navbar {
+      padding-left: max(1rem, env(safe-area-inset-left));
+      padding-right: max(1rem, env(safe-area-inset-right));
+    }
+  }
+
+  /* Improved mobile form inputs */
+  @media (max-width: 480px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="search"],
+    input[type="number"],
+    select,
+    textarea {
+      font-size: 16px; /* Prevent zoom on iOS */
+      border-radius: 8px;
+    }
+
+    /* Make inputs full width on mobile */
+    .filter-control {
+      width: 100%;
+    }
+  }
+
+  /* Better mobile typography */
+  @media (max-width: 640px) {
+    h1 {
+      font-size: 1.5rem;
+      line-height: 1.3;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      line-height: 1.4;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      line-height: 1.5;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+  }
+
+  /* Mobile card stacking */
+  @media (max-width: 480px) {
+    .movies-grid,
+    .random-movies-grid {
+      margin-bottom: 1rem;
+    }
+
+    .movie-card {
+      max-width: 100%;
+      aspect-ratio: auto;
+    }
+  }
+
+  /* Improved button layout on mobile */
+  @media (max-width: 480px) {
+    .filter-action-btn {
+      width: 100%;
+    }
+
+    .clear-btn,
+    .apply-btn {
+      width: 100%;
+    }
+  }
+
+  /* Better navbar spacing on mobile */
+  @media (max-width: 640px) {
+    .glass-navbar {
+      margin: 8px 10px;
+      padding: 10px 12px;
+      gap: 8px;
+    }
+
+    /* Hide search on very small screens, show toggle button instead */
+    .navbar-search-container {
+      flex: 0 0 auto;
+      width: 32px;
+    }
+
+    .search-input {
+      display: none;
+    }
+
+    .search-toggle-btn {
+      display: flex;
+    }
+  }
+
+  /* Improved popover/modal positioning for mobile */
+  @media (max-width: 768px) {
+    .modal, .popover, .popup {
+      max-height: 90vh;
+      max-width: 95vw;
+      margin: auto;
+      border-radius: 12px;
+    }
+  }
+
+  /* Better spacing for category buttons on mobile */
+  @media (max-width: 480px) {
+    .category-switcher {
+      gap: 0.5rem;
+    }
+
+    .category-button {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+  }
+
+  /* Optimize footer for mobile */
+  @media (max-width: 640px) {
+    footer {
+      padding: 1rem 0.75rem;
+    }
+
+    footer a {
+      display: block;
+      padding: 0.5rem 0;
+    }
+  }
+
+  /* Prevent text selection on double-tap */
+  @media (max-width: 768px) {
+    button, a {
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      user-select: none;
+    }
+  }
+
+  /* Improved scrolling performance */
+  @media (max-width: 768px) {
+    .movies-grid,
+    .random-movies-grid {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  /* Mobile-specific spacing utilities */
+  .mobile-only {
+    display: none;
+  }
+
+  .desktop-only {
+    display: block;
+  }
+
+  @media (max-width: 768px) {
+    .mobile-only {
+      display: block;
+    }
+
+    .desktop-only {
+      display: none;
+    }
+  }
+
+  /* Fix for sticky elements on mobile */
+  @media (max-width: 768px) {
+    .glass-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .filter-navbar {
+      position: relative;
+      z-index: 30;
+    }
   }
 }
 

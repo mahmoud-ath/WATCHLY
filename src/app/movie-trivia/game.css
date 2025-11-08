@@ -348,6 +348,20 @@
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1024px) {
+  .home-container {
+    padding: 1.5rem;
+  }
+
+  .home-glass-card {
+    padding: 1.5rem;
+  }
+
+  .home-option-card {
+    padding: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .home-container {
     padding: 1rem;
@@ -355,21 +369,149 @@
   
   .home-glass-card {
     backdrop-filter: blur(10px);
+    padding: 1.25rem;
+    border-radius: 1rem;
+    margin: 0.75rem;
   }
-  
+
+  .home-option-card {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+
   .home-film-reel {
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
+  }
+
+  .btn-primary,
+  .btn-accent {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  .home-score-display {
+    padding: 1rem;
+    font-size: 1.1rem;
   }
 }
 
 @media (max-width: 480px) {
+  .home-container {
+    padding: 0.75rem;
+  }
+
+  .home-glass-card {
+    backdrop-filter: blur(8px);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin: 0.5rem;
+  }
+
+  .home-option-card {
+    padding: 0.65rem;
+    font-size: 0.9rem;
+    border-radius: 0.6rem;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .home-option-card:hover {
     transform: none;
   }
-  
+
+  .home-film-reel {
+    width: 40px;
+    height: 40px;
+  }
+
+  .btn-primary,
+  .btn-accent {
+    padding: 0.65rem 1.2rem;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+
+  .home-score-display {
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+
   .home-glow {
     animation: none;
+  }
+
+  .home-animate-pop {
+    animation: none;
+  }
+
+  h1, h2 {
+    font-size: 1.25rem;
+  }
+
+  p {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .home-container {
+    padding: 0.5rem;
+  }
+
+  .home-glass-card {
+    padding: 0.75rem;
+    border-radius: 0.6rem;
+    margin: 0.25rem;
+  }
+
+  .home-option-card {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    min-height: 55px;
+    border-radius: 0.5rem;
+  }
+
+  .home-film-reel {
+    width: 35px;
+    height: 35px;
+  }
+
+  .btn-primary,
+  .btn-accent {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .home-score-display {
+    padding: 0.6rem;
+    font-size: 0.95rem;
+  }
+
+  h1, h2 {
+    font-size: 1.1rem;
+  }
+
+  p {
+    font-size: 0.85rem;
+  }
+}
+
+/* Tablet landscape orientation */
+@media (max-width: 1024px) and (orientation: landscape) {
+  .home-container {
+    padding: 0.75rem;
+  }
+
+  .home-glass-card {
+    padding: 0.75rem;
+  }
+
+  .home-option-card {
+    padding: 0.5rem;
+    font-size: 0.9rem;
   }
 }
 

@@ -72,3 +72,66 @@
   --color-gradient-to: var(--gradient-to);
   --font-sans: 'Inter', sans-serif;
 }
+
+/* ===== MOBILE-FIRST RESPONSIVE DEFAULTS ===== */
+
+/* Base mobile-first settings */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Prevent horizontal scroll */
+  html {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Optimize for mobile touch */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Mobile safe area support */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Prevent zoom on input focus (iOS) */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Improve mobile performance */
+@media (max-width: 768px) {
+  * {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  img {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Better scrollbar on mobile */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+  }
+}
