@@ -1,6 +1,7 @@
-// app/layout.tsx
+// app/home/layout.tsx
+'use client'
 import './main.css'
-import { ThemeProvider } from '../contexts/ThemeContext'
+import { ThemeProvider } from '../../shared/contexts/ThemeContext'
 import { Toaster } from 'react-hot-toast'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -10,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <title>Watchly - Your Movie Companion</title>
         <meta name="description" content="Discover, save, and share your favorite movies with Watchly" />
       </head>
-      <body className="min-h-screen bg-gradient-to-br from-background to-secondary text-text-primary">
+      <body className="min-h-screen bg-background text-text-primary">
         <ThemeProvider>
           
             <div className="min-h-screen flex flex-col">

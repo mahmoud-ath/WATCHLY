@@ -1,0 +1,6 @@
+export { FooterBrand } from './FooterBrand'
+export { SocialLinks } from './SocialLinks'
+export { QuickLinks } from './QuickLinks'
+export { FooterStats } from './FooterStats'
+export { SupportSection } from './SupportSection'
+export { FooterBottom } from './FooterBottom'

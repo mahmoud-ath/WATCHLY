@@ -2,7 +2,7 @@
 import './game.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { ThemeProvider } from '../contexts/ThemeContext'
+import { ThemeProvider } from '../../shared/contexts/ThemeContext'
 
 
 const inter = Inter({ subsets: ['latin'] })

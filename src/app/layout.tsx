@@ -1,7 +1,7 @@
 
-import { ThemeProvider } from './contexts/ThemeContext'
+import { ThemeProvider } from '../shared/contexts/ThemeContext'
 import './globals.css'
-import { Analytics } from "@vercel/analytics/next"
+
 export const metadata = {
   title: 'WATCHLY - Movie Discovery Platform',
   description: 'Discover, explore, and manage your favorite movies. Powered by TMDB.',
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ThemeProvider>
           
-            <div className="min-h-screen bg-gradient-to-br from-background to-surface-elevated text-text-primary antialiased">
+            <div className="min-h-screen bg-background text-text-primary antialiased">
               {children}
             </div>
          
